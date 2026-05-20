@@ -1,0 +1,24 @@
+; vbrecomp debug.ini.example
+;
+; Copy to debug.ini next to the vb-runtime / vb-beetle executable
+; to override default ports and behaviour.
+
+[runtime]
+debug_port = 4390
+window_title = "vbrecomp - runtime"
+
+[oracle]
+debug_port = 4391
+window_title = "vbrecomp - Beetle VB oracle"
+
+[debug]
+; Always-on ring sizes. 36000 frames @ 50.27 Hz = ~12 min coverage.
+frame_ring_size  = 36000
+fntrace_ring_size = 1048576
+wtrace_ring_size  = 1048576
+
+; If true, vb_stub_abort() dumps vb_last_run_report.json and exits.
+; If false (NOT RECOMMENDED — used only for triage), the abort is logged
+; but execution continues. This violates the no-stubs rule and should
+; never be set false in a committed run.
+stub_abort_fatal = true
