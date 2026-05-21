@@ -24,8 +24,9 @@ compile_commands.json
 # Vendored upstream sources (cloned locally per BRINGUP.md, not checked in)
 beetle-vb/
 
-# Recompiler output — derivative of copyrighted Nintendo ROM, regenerate locally
-generated/
+# Recompiler output — code only (no ROM bytes), committed so the
+# binary release can be reproduced from source without distributing
+# the cart. Same pattern as nesrecomp game repos.
 
 # Ghidra project files (large, regenerable, may include cart bytes)
 ghidra/
@@ -43,12 +44,18 @@ vbrecomp/
 *.bmp
 vb-runtime-*.png
 vb-beetle-*.png
+sdl-window*.png
+verify*.png
 *.log
 *.jsonl
 worlds.json
 vb_last_run_report.json
 vb_freeze_dump_*.json
 starvation_dump.jsonl
+
+# Release staging (built locally for upload, not checked in)
+release-stage/
+*.zip
 
 # Editor / OS
 .vscode/

@@ -1,0 +1,16 @@
+# marios_tennis.toml -- per-cart codegen config.
+#
+# [functions].seeds is now empty: the framework's
+# scan_rom_for_function_pointers heuristic
+# (table-shape, min_run=4, cart-PC range, per-seed walk-cap 800)
+# finds every function-pointer-table entry the cart needs at runtime
+# without any hand-curated input. Keep this list ready in case a
+# future regression surfaces a missing entry; until then the
+# framework alone covers Mario's Tennis.
+
+[program]
+name = "MariosTennis"
+rom_sha256 = "5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101"
+
+[functions]
+seeds = []

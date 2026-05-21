@@ -1,0 +1,17 @@
+# vbrecomp.pin — pins this game's expected vbrecomp framework version.
+#
+# Resolution:
+#   - If `sha` is set: use exactly that commit.
+#   - Else: tip of `branch` (default origin/master).
+#
+# To roll forward to a newer framework commit:
+#   1. Update `sha` below
+#   2. cd vbrecomp && git checkout <sha>
+#   3. Commit this file
+#
+# The framework subdir `vbrecomp/` is its own git repo (not a submodule,
+# not a junction — a sibling clone of git@github.com:mstan/vbrecomp.git
+# living inside this game repo and gitignored from the outer history).
+
+branch = master
+sha    = 62f4e66cba2a6639efd5c3cf1f88064f86f31092
