@@ -1,6 +1,6 @@
 # MarioTennisVirtualBoyRecomp
 
-Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native Windows binary.
+Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native binary on Windows, macOS (Apple Silicon & Intel), and Linux.
 Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 
 > **Status: Playable.** A full match against the CPU completes without crashes. Audio, video, and input are all wired. Pixel-perfect on the title/warning screen versus the Beetle VB reference (0 / 86 016 pixels differ at zero tolerance).
@@ -36,11 +36,12 @@ Keyboard:
 | L / R         | Q / E          |
 | Start / Select| Enter / Right Shift |
 | Turbo         | TAB (skip 50.27 Hz pacing) |
+| Fullscreen    | F11 / Alt+Enter / Cmd+F |
 | Quit          | Esc            |
 
-Xbox controller (XInput, player 1):
+Game controller (SDL, player 1) — Xbox, PlayStation, or any SDL-recognized pad, on every platform:
 
-| Virtual Boy   | Xbox             |
+| Virtual Boy   | Controller       |
 |---------------|------------------|
 | Left D-pad    | D-pad or left stick |
 | Right D-pad   | Right stick      |
@@ -58,7 +59,7 @@ Xbox controller (XInput, player 1):
 | `--port N`            | TCP debug port (default 4390)                           |
 | `--help`              | Print full usage                                        |
 
-The window opens at 768 × 448 (single-eye, 2× scale) by default. Resize freely — content letterboxes to preserve aspect.
+The window opens at 768 × 448 (single-eye, 2× scale) by default. Resize freely — content letterboxes to preserve aspect. F11 / Alt+Enter / Cmd+F toggles fullscreen.
 
 ---
 
@@ -128,7 +129,34 @@ cmake --build build --target vb-runtime
 .\build\vbrecomp\runtime\vb-runtime.exe --rom roms\marios_tennis.vb
 ```
 
-The framework's pin check refuses to configure if `vbrecomp/` is at a different commit than `vbrecomp.pin`. Roll the pin forward by editing the SHA, checking out, and committing.
+`vbrecomp.pin` records the framework commit this game was generated against; roll it forward by editing the SHA, checking out, and committing.
+
+#### macOS / Linux
+
+The generated C is committed, so no Python regen step is needed for a stock
+build — just clone the framework at the pinned SHA and build. SDL2 comes from
+Homebrew (macOS) or your distro (Linux).
+
+```bash
+# macOS prerequisites
+brew install cmake ninja sdl2
+# Debian/Ubuntu prerequisites
+# sudo apt install build-essential cmake ninja-build libsdl2-dev
+
+git clone https://github.com/mstan/MarioTennisVirtualBoyRecomp.git
+cd MarioTennisVirtualBoyRecomp
+
+# Clone the framework as a sibling subdirectory at the pinned SHA
+git clone https://github.com/mstan/vbrecomp.git vbrecomp
+git -C vbrecomp checkout "$(sed -n 's/^sha[[:space:]]*=[[:space:]]*//p' vbrecomp.pin)"
+
+# Configure + build (a ROM is only needed to run, not to build)
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+ninja -C build vb-runtime
+
+# Run — provide your own cart dump
+./build/vbrecomp/runtime/vb-runtime --rom "path/to/marios_tennis.vb"
+```
 
 ### Beetle VB oracle (development only)
 
@@ -170,7 +198,7 @@ gh release create vX.Y.Z MarioTennisVirtualBoyRecomp-windows-x64.zip --title "..
 This is a **static recompiler**, not an emulator. The V810 machine code in the cart ROM is decoded once at codegen time and translated to C functions, one per cart function. Those C functions are compiled by gcc into native x86-64. At runtime there is no V810 fetch/decode/execute loop — each cart function is a native call.
 
 - **Decoder + recompiler**: `vbrecomp/recompiler/` (Python).
-- **Runtime**: `vbrecomp/runtime/` — V810 register state, MMIO bus, VIP (renderer), VSU (audio synthesis), interrupt controller, timer, input register, TCP debug server, SDL window + audio + XInput frontend.
+- **Runtime**: `vbrecomp/runtime/` — V810 register state, MMIO bus, VIP (renderer), VSU (audio synthesis), interrupt controller, timer, input register, TCP debug server, SDL window + audio + SDL_GameController frontend (cross-platform).
 - **Per-cart generated code**: `generated/marios_tennis_{full,dispatch}.c` — committed for build reproducibility (code only; no ROM bytes).
 
 ### Licence
