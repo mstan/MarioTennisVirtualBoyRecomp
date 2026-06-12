@@ -1,0 +1,4 @@
+[submodule "vbrecomp"]
+	path = vbrecomp
+	url = git@github.com:mstan/vbrecomp.git
+	branch = feat/shadow-enhancements

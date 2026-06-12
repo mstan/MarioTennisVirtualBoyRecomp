@@ -1,17 +1,37 @@
-# vbrecomp.pin — pins this game's expected vbrecomp framework version.
+# vbrecomp.pin — pins which vbrecomp framework commit this game builds against.
 #
-# Resolution:
-#   - If `sha` is set: use exactly that commit.
-#   - Else: tip of `branch` (default origin/master).
+# PIN MECHANISM
+# -------------
+# The authoritative pin is the SUBMODULE GITLINK recorded for `vbrecomp/`
+# (see .gitmodules). The committed gitlink SHA *is* the version this game
+# builds and ships against; a fresh `git submodule update --init` checks out
+# exactly that commit. This file is the human-readable mirror of that gitlink
+# (kept in sync) plus the local-dev story below.
 #
-# To roll forward to a newer framework commit:
-#   1. Update `sha` below
-#   2. cd vbrecomp && git checkout <sha>
-#   3. Commit this file
+# LOCAL DEV (Windows): the working-tree `vbrecomp/` is a directory JUNCTION to
+# a single shared clone so edits to the framework are live across every game
+# repo at once, with no per-repo copy to keep in sync:
 #
-# The framework subdir `vbrecomp/` is its own git repo (not a submodule,
-# not a junction — a sibling clone of git@github.com:mstan/vbrecomp.git
-# living inside this game repo and gitignored from the outer history).
+#     # from this repo's root, once:
+#     cmd /c rmdir vbrecomp                 # if a real submodule checkout exists
+#     New-Item -ItemType Junction -Path vbrecomp `
+#         -Target F:\Projects\virtualboyrecomp\vbrecomp
+#
+# The junction resolves to a real git repo, so the submodule gitlink still
+# reads correctly; CI / fresh clones without the junction get a normal
+# submodule checkout at the pinned SHA instead.
+#
+# ROLL THE PIN FORWARD
+# --------------------
+#   1. Commit (and push) the new framework commit in vbrecomp.
+#   2. In this repo, re-point the gitlink to it and update `sha` below:
+#        git -C vbrecomp rev-parse HEAD                 # the new SHA
+#        git update-index --add --cacheinfo 160000,<sha>,vbrecomp
+#        # (or `git add vbrecomp` when vbrecomp/ is a real submodule checkout)
+#   3. Commit this file + the gitlink together.
+#
+# The gitlink SHA must exist on the submodule's remote, or `submodule update`
+# fails for everyone else — push vbrecomp before pinning to its commit.
 
-branch = master
-sha    = 62f4e66cba2a6639efd5c3cf1f88064f86f31092
+branch = feat/shadow-enhancements
+sha    = beb104caa5a7b0b44c589af6d601b862a1d24504

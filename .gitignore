@@ -31,9 +31,10 @@ beetle-vb/
 # Ghidra project files (large, regenerable, may include cart bytes)
 ghidra/
 
-# The framework lives in a separate repo; clone it as a sibling subdir
-# but do NOT include it in this repo's history.
-vbrecomp/
+# The framework (vbrecomp) is tracked as a git SUBMODULE (.gitmodules +
+# the gitlink at vbrecomp/). For local dev the working-tree path is a
+# Windows junction to a shared clone (see vbrecomp.pin) — not gitignored,
+# so the submodule gitlink stays visible. Do not re-add `vbrecomp/` here.
 
 # Runtime artifacts / screenshots
 #   *.bmp / vb-runtime-*.png / vb-beetle-*.png are transient
