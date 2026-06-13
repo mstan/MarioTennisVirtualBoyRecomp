@@ -82,6 +82,41 @@ CHARACTERS = [
 ]
 
 
+# mode_select roster strip. The 7 character face-portraits (MARIO LUIGI PRINCESS
+# YOSHI TOAD KOOPA DKJR, left->right) are all drawn under VIP world 30, so a
+# single flat ramp tints them one uniform skin tone. World 30's on-screen bbox
+# spans the whole strip (verified via world_map: x0=32..x1=351), so split it into
+# 7 equal HORIZONTAL columns (hx in 0..256, rel-x within the bbox) and color each
+# portrait its character's signature hue. Portrait order == character index, so
+# column i uses CHARACTERS[i]. Humans get a cap/hair band over a face-skin band;
+# Yoshi/Koopa/DK are flat. This is a static menu (bbox stable, no animation), so
+# the per-column bands don't jitter. ROSTER_HX[i] is the right edge of column i.
+ROSTER_HX = [37, 73, 110, 146, 183, 219, 256]
+CAP_HI = 115   # cap/hair ends ~45% down the circular portrait
+# (index -> vertical bands for that portrait: [(hi, ramp), ...])
+ROSTER_BANDS = {
+    0: [(CAP_HI, RED),    (256, SKIN)],    # mario:    red cap over face
+    1: [(CAP_HI, GREEN),  (256, SKIN)],    # luigi:    green cap over face
+    2: [(CAP_HI, BLONDE), (256, SKIN)],    # princess: blonde hair over face
+    3: [(256, GREEN)],                     # yoshi:    green (flat)
+    4: [(CAP_HI, WHITE),  (256, SKIN)],    # toad:     white mushroom cap over face
+    5: [(256, GREEN)],                     # koopa:    green (flat)
+    6: [(256, BROWN)],                     # dkjr:     brown fur (flat)
+}
+
+def roster_cols():
+    """world 30 horizontal columns, one per roster portrait (left->right)."""
+    cols = []
+    for i, hx in enumerate(ROSTER_HX):
+        bands = ROSTER_BANDS[i]
+        if len(bands) == 1:
+            cols.append({"hx": hx, "ramp": bands[0][1]})
+        else:
+            cols.append({"hx": hx,
+                         "bands": [{"hi": h, "ramp": r} for h, r in bands]})
+    return cols
+
+
 # Match detection keys on the court (world 28, present every match frame) and
 # excludes the menu/title (worlds 29/31 never appear during a match). Keying on
 # the near player (world 22) is unreliable: the VB redraws it on alternating
@@ -116,7 +151,7 @@ def build():
             {"world": 31, "label": "menu_text", "ramp": ["#000000", "#404040", "#909090", "#e8e8e8"]},
             {"world": 28, "label": "mode_box",  "ramp": ["#000000", "#806000", "#c0a000", "#ffe040"]},
             {"world": 29, "label": "roster_frame", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"]},
-            {"world": 30, "label": "roster_faces", "ramp": ["#000000", "#7a4a28", "#c08850", "#f0c090"]},
+            {"world": 30, "label": "roster_faces", "cols": roster_cols()},
         ]})
     scenes.append({
         "name": "title", "detect": {"all": [25, 26, 31], "none": [22, 29]},
