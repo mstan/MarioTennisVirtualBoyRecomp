@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""build_palette.py — author a canonical recolor pack with logic, not hand work.
+"""build_palette.py — author a world-based recolor pack (animation-stable).
 
-Queries the runtime's `attr_hashes` for the current scene and assigns each
-on-screen tile a real color ramp by rule: scene elements (sky / skyline / court
-/ net / HUD) by screen region, and characters by palette + position using
-canonical Mario-universe colors (refs: Super Mario Wiki). Writes
-<overrides_dir>/recolor/palette.json; reload in the runtime to apply.
+Queries the runtime's `world_map` (per-world on-screen bbox) for the current
+scene, classifies each VIP world by its footprint (sky / skyline / court / net /
+HUD / near-player / opponent), and emits <overrides_dir>/recolor/palette.json:
+scene layers get a flat canonical ramp; characters get vertical "body bands"
+(cap / face / shirt / overalls / shoes) so the whole character is colored
+consistently across every animation frame (world index is stable; tiles are
+not). Reload in the runtime (recolor_reload) to apply.
 
-Rules are intentionally simple/heuristic ("use logic on what you extract") and
-easy to tweak per scene via --scene. Unmatched tiles are left faithful.
+Colors reference Super Mario Wiki. Unmatched worlds stay faithful.
 
 Usage:
   python tools/build_palette.py OVERRIDES_DIR --scene match [--port 4390] [--eye 0]
@@ -30,69 +31,53 @@ def cmd(port, c, **kw):
     return json.loads(data.decode())
 
 
-def ramp(base, dark=0.30, mid=0.62):
-    """4-level ramp (value 0 transparent-ish black, then dark/mid/full)."""
-    r, g, b = base
-    def sc(f):
-        return "#%02x%02x%02x" % (int(r * f), int(g * f), int(b * f))
-    return ["#000000", sc(dark), sc(mid), sc(1.0)]
-
-
-# canonical colors (0..255), refs: Super Mario Wiki
-C = {
-    "mario_red":   (0xE0, 0x10, 0x10),
-    "mario_blue":  (0x20, 0x40, 0xD0),
-    "luigi_green": (0x18, 0xB0, 0x20),
-    "skin":        (0xF0, 0xC0, 0x90),
-    "sky":         (0x30, 0x70, 0xE0),
-    "skyline":     (0x50, 0x60, 0x90),
-    "court":       (0x30, 0xA0, 0x40),
-    "court_line":  (0xF0, 0xF0, 0xF0),
-    "net":         (0xF0, 0xF0, 0xF0),
-    "hud":         (0xF0, 0xC0, 0x20),
-    "ball":        (0xF0, 0xE0, 0x40),
-    "shoes":       (0x80, 0x50, 0x20),
-    "opponent":    (0x8a, 0x5a, 0x2a),   # Donkey Kong Jr. brown
+# Flat element ramps (value 0 = black, then 3 brightness shades).
+FLAT = {
+    "court":   ["#000000", "#0a4018", "#1c7a30", "#34c050"],
+    "skyline": ["#000000", "#1a2240", "#34406a", "#5a6aa0"],
+    "sky":     ["#000000", "#102050", "#2848a0", "#4070e0"],
+    "net":     ["#000000", "#505050", "#a8a8a8", "#f4f4f4"],
+    "opponent":["#000000", "#3a2410", "#7a5020", "#b88030"],   # DK Jr. brown
 }
 
+# Mario body bands by vertical fraction of the player's bbox (hi in 0..256).
+MARIO_BANDS = [
+    {"hi": 60,  "ramp": ["#000000", "#7a0000", "#c81010", "#ff3030"]},  # cap (red)
+    {"hi": 96,  "ramp": ["#000000", "#8a5a30", "#d59a60", "#f0c090"]},  # face (skin)
+    {"hi": 150, "ramp": ["#000000", "#7a0000", "#c81010", "#ff3030"]},  # shirt (red)
+    {"hi": 208, "ramp": ["#000000", "#101878", "#2030b0", "#3048e0"]},  # overalls (blue)
+    {"hi": 256, "ramp": ["#000000", "#3a2410", "#6a4420", "#8a5a2a"]},  # shoes (brown)
+]
 
-def classify_match(t):
-    """Return a color name (or None = leave faithful) for a match-scene tile,
-    by on-screen region. Wide tiles are scene layers; compact tiles in the
-    lower-center play area are the near player, sub-colored by vertical
-    position into Mario's body parts (cap/shirt red, overalls blue, shoes)."""
-    cx = (t["x0"] + t["x1"]) // 2
-    cy = (t["y0"] + t["y1"]) // 2
-    w  = t["x1"] - t["x0"]
-    h  = t["y1"] - t["y0"]
 
-    # Leave the HUD scoreboard + player-name banner faithful (top band).
-    if cy < 100 and (cx > 264 or w > 120):
+def classify(w):
+    """Return ('flat', name) | ('mario', None) | None (leave faithful)."""
+    if w["count"] < 24:
         return None
-    # Sky + skyline (upper background)
-    if cy < 70:
-        return "skyline" if w > 120 else "sky"
-    # Net: thin wide band around the middle
-    if 78 <= cy <= 104 and w > 150:
-        return "net"
-    # Court: wide tiles across the lower half
-    if cy >= 100 and w > 140:
-        return "court"
+    cx = (w["x0"] + w["x1"]) // 2
+    cy = (w["y0"] + w["y1"]) // 2
+    ww = w["x1"] - w["x0"]
+    hh = w["y1"] - w["y0"]
 
-    # Near player (Mario): compact tiles clustered bottom-center.
-    if cx >= 110 and cx <= 270 and cy >= 104 and w <= 110 and h <= 110:
-        if cy < 138:  return "mario_red"     # cap + upper
-        if cy < 168:  return "skin"          # face / hands band
-        if cy < 192:  return "mario_blue"    # overalls
-        return "shoes"
-    # Far player (opponent): compact tiles upper-mid of the court
-    if cy < 104 and w <= 110 and h <= 90:
-        return "opponent"
-
-    # small fast-moving compact tile high up = ball
-    if w <= 24 and h <= 24:
-        return "ball"
-    return "court_line"
+    # HUD scoreboard / banner (top, right or wide) — leave faithful.
+    if cy < 72 and (cx > 264 or ww > 150):
+        # sky/skyline is wide too; distinguish: HUD is small-area, top-right
+        if cx > 240 and ww < 170:
+            return None
+        return ("flat", "skyline")
+    if cy < 72:
+        return ("flat", "sky")
+    if 74 <= cy <= 112 and ww > 150:
+        return ("flat", "net")
+    if cy >= 100 and ww > 200:
+        return ("flat", "court")
+    # near player: compact, lower-center
+    if 90 <= cx <= 290 and cy >= 96 and ww <= 150 and hh >= 24:
+        return ("mario", None)
+    # far player: compact, upper-mid
+    if cy < 112 and ww <= 150:
+        return ("flat", "opponent")
+    return None
 
 
 def main():
@@ -101,35 +86,37 @@ def main():
     ap.add_argument("--scene", default="match")
     ap.add_argument("--port", type=int, default=4390)
     ap.add_argument("--eye", type=int, default=0)
-    ap.add_argument("--top", type=int, default=96)
     args = ap.parse_args()
 
-    resp = cmd(args.port, "attr_hashes", eye=args.eye, top=args.top)
-    tiles = resp.get("tiles", [])
-    if not tiles:
-        raise SystemExit("no on-screen tiles (attribution active? scene drawn?)")
+    worlds = cmd(args.port, "world_map", eye=args.eye).get("worlds", [])
+    if not worlds:
+        raise SystemExit("no on-screen worlds (attribution active? scene drawn?)")
 
-    classify = {"match": classify_match}[args.scene]
-    entries, seen = [], set()
-    for t in tiles:
-        if t["hash"] in seen:
+    entries = []
+    for w in worlds:
+        kind = classify(w)
+        if kind is None:
             continue
-        seen.add(t["hash"])
-        name = classify(t)
-        if name is None:
-            continue          # leave this tile faithful (no entry)
-        entries.append({"hash": t["hash"], "label": name,
-                        "bbox": [t["x0"], t["y0"], t["x1"], t["y1"]],
-                        "ramp": ramp(C[name])})
+        if kind[0] == "mario":
+            entries.append({"world": w["world"], "label": "mario",
+                            "bbox": [w["x0"], w["y0"], w["x1"], w["y1"]],
+                            "bands": MARIO_BANDS})
+        else:
+            name = kind[1]
+            entries.append({"world": w["world"], "label": name,
+                            "bbox": [w["x0"], w["y0"], w["x1"], w["y1"]],
+                            "ramp": FLAT[name]})
 
     out_dir = os.path.join(args.overrides_dir, "recolor")
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, "palette.json"), "w") as f:
-        json.dump({"_comment": "Canonical recolor pack (build_palette.py, scene=%s)."
-                              % args.scene, "entries": entries}, f, indent=2)
-    from collections import Counter
-    print("wrote %d entries -> %s" % (len(entries), out_dir))
-    print("by element:", dict(Counter(e["label"] for e in entries)))
+        json.dump({"_comment": "World-based recolor pack (build_palette.py, scene=%s); "
+                              "animation-stable." % args.scene,
+                   "worlds": entries}, f, indent=2)
+    print("wrote %d world rules -> %s" % (len(entries), out_dir))
+    for e in entries:
+        print("  world %-2d %-9s %s" % (e["world"], e["label"],
+                                        "bands" if "bands" in e else e["ramp"][3]))
 
 
 if __name__ == "__main__":
