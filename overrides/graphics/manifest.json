@@ -1,0 +1,123 @@
+{
+  "_comment": "Colored override pack (experiment). Faithful by default; active only when VBRECOMP_OVERRIDES points at this overrides/ dir. Each entry recolors one captured OBJ tile by content hash.",
+  "source_frame": 55358,
+  "replacements": [
+    {
+      "id": "tile_097eec65",
+      "match": {
+        "tile_hash": "097eec65"
+      },
+      "image": "097eec65.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_3825ce21",
+      "match": {
+        "tile_hash": "3825ce21"
+      },
+      "image": "3825ce21.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_5cc79c10",
+      "match": {
+        "tile_hash": "5cc79c10"
+      },
+      "image": "5cc79c10.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_64a227fd",
+      "match": {
+        "tile_hash": "64a227fd"
+      },
+      "image": "64a227fd.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_66c93bcd",
+      "match": {
+        "tile_hash": "66c93bcd"
+      },
+      "image": "66c93bcd.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_6805c615",
+      "match": {
+        "tile_hash": "6805c615"
+      },
+      "image": "6805c615.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_73bade01",
+      "match": {
+        "tile_hash": "73bade01"
+      },
+      "image": "73bade01.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_87ae09c1",
+      "match": {
+        "tile_hash": "87ae09c1"
+      },
+      "image": "87ae09c1.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_a5283fbd",
+      "match": {
+        "tile_hash": "a5283fbd"
+      },
+      "image": "a5283fbd.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_ac8de5ad",
+      "match": {
+        "tile_hash": "ac8de5ad"
+      },
+      "image": "ac8de5ad.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_e279de88",
+      "match": {
+        "tile_hash": "e279de88"
+      },
+      "image": "e279de88.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_f601aa15",
+      "match": {
+        "tile_hash": "f601aa15"
+      },
+      "image": "f601aa15.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    },
+    {
+      "id": "tile_fae9e762",
+      "match": {
+        "tile_hash": "fae9e762"
+      },
+      "image": "fae9e762.png",
+      "anchor_x": 0,
+      "anchor_y": 0
+    }
+  ]
+}
