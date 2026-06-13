@@ -51,30 +51,46 @@ C = {
     "net":         (0xF0, 0xF0, 0xF0),
     "hud":         (0xF0, 0xC0, 0x20),
     "ball":        (0xF0, 0xE0, 0x40),
+    "shoes":       (0x80, 0x50, 0x20),
+    "opponent":    (0x8a, 0x5a, 0x2a),   # Donkey Kong Jr. brown
 }
 
 
 def classify_match(t):
-    """Return a color name for a tile in the match scene by region + palette."""
+    """Return a color name (or None = leave faithful) for a match-scene tile,
+    by on-screen region. Wide tiles are scene layers; compact tiles in the
+    lower-center play area are the near player, sub-colored by vertical
+    position into Mario's body parts (cap/shirt red, overalls blue, shoes)."""
     cx = (t["x0"] + t["x1"]) // 2
     cy = (t["y0"] + t["y1"]) // 2
     w  = t["x1"] - t["x0"]
     h  = t["y1"] - t["y0"]
-    # HUD scoreboard: top-right cluster
-    if cy < 36 and cx > 270:
-        return "hud"
-    # wide thin court lines / net near the middle band
-    if cy < 60 and w > 200:
-        return "skyline"
-    if cy < 60:
-        return "sky"
-    # court: wide tiles in the lower half
-    if cy >= 110 and w > 200:
+
+    # Leave the HUD scoreboard + player-name banner faithful (top band).
+    if cy < 100 and (cx > 264 or w > 120):
+        return None
+    # Sky + skyline (upper background)
+    if cy < 70:
+        return "skyline" if w > 120 else "sky"
+    # Net: thin wide band around the middle
+    if 78 <= cy <= 104 and w > 150:
+        return "net"
+    # Court: wide tiles across the lower half
+    if cy >= 100 and w > 140:
         return "court"
-    # players / ball: compact tiles in the play area
-    if t["palette"] == 1:
-        return "mario_red"          # near player body (palette 1)
-    if w <= 24 and h <= 24 and cy < 130:
+
+    # Near player (Mario): compact tiles clustered bottom-center.
+    if cx >= 110 and cx <= 270 and cy >= 104 and w <= 110 and h <= 110:
+        if cy < 138:  return "mario_red"     # cap + upper
+        if cy < 168:  return "skin"          # face / hands band
+        if cy < 192:  return "mario_blue"    # overalls
+        return "shoes"
+    # Far player (opponent): compact tiles upper-mid of the court
+    if cy < 104 and w <= 110 and h <= 90:
+        return "opponent"
+
+    # small fast-moving compact tile high up = ball
+    if w <= 24 and h <= 24:
         return "ball"
     return "court_line"
 
@@ -100,6 +116,8 @@ def main():
             continue
         seen.add(t["hash"])
         name = classify(t)
+        if name is None:
+            continue          # leave this tile faithful (no entry)
         entries.append({"hash": t["hash"], "label": name,
                         "bbox": [t["x0"], t["y0"], t["x1"], t["y1"]],
                         "ramp": ramp(C[name])})
