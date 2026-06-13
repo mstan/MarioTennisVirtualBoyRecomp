@@ -27,14 +27,16 @@ import json, os, sys
 
 PLAYER_CHAR_ADDR = "0x0500203A"   # WRAM: P1 selected character index 0..6
 
-# Shared in-match scenery (same for every character).
+# Shared in-match scenery (same for every character). Only worlds whose index
+# reliably maps to the same element during a match are colored here. Worlds
+# 19/20/21/26 are deliberately left faithful: they draw the far opponent and the
+# sky during a rally but are reused for big score/CHANGE-SERVICE text on the
+# between-points screens, so coloring them bleeds onto that text (e.g. "PRINCESS"
+# rendered blue). World 24 is the net tape (a horizontal band ~y118-129).
 MATCH_SCENERY = [
     {"world": 30, "label": "skyline", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"]},
     {"world": 28, "label": "court",   "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"]},
-    {"world": 21, "label": "sky",     "ramp": ["#000000", "#102050", "#2848a0", "#4070e0"]},
-    {"world": 20, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"]},
-    {"world": 19, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"]},
-    {"world": 26, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"]},
+    {"world": 24, "label": "net",     "ramp": ["#000000", "#606060", "#b0b0b0", "#f4f4f4"]},
 ]
 
 # Per-character world-22 vertical body bands (cap/face/torso/legs/feet).
@@ -63,12 +65,21 @@ CHARACTERS = [
 ]
 
 
+# Match detection keys on the court (world 28, present every match frame) and
+# excludes the menu/title (worlds 29/31 never appear during a match). Keying on
+# the near player (world 22) is unreliable: the VB redraws it on alternating
+# frames, so ~10% of frames lack it. With court-keying the scene stays selected
+# through that dropout; the player's world-22 rule simply has no pixels to color
+# on a frame where it isn't drawn (instead of the whole frame falling to red).
+MATCH_DETECT_NONE = [29, 31]
+
 def match_scene(index, name, bands):
     rules = list(MATCH_SCENERY)
     rules.append({"world": 22, "label": name,
                   "bands": [{"hi": hi, "ramp": ramp} for hi, ramp in bands]})
     return {"name": "match_" + name,
-            "detect": {"all": [22], "ram": {"addr": PLAYER_CHAR_ADDR, "eq": index}},
+            "detect": {"all": [28], "none": MATCH_DETECT_NONE,
+                       "ram": {"addr": PLAYER_CHAR_ADDR, "eq": index}},
             "worlds": rules}
 
 
@@ -77,7 +88,7 @@ def build():
     # fallback: any unknown P1 index still gets a colored (Mario) match
     fallback = match_scene(0, "mario", CHARACTERS[0][2])
     fallback["name"] = "match"
-    fallback["detect"] = {"all": [22]}
+    fallback["detect"] = {"all": [28], "none": MATCH_DETECT_NONE}
     scenes.append(fallback)
     # mode_select + title (unchanged layouts)
     scenes.append({
@@ -89,7 +100,7 @@ def build():
             {"world": 30, "label": "roster_faces", "ramp": ["#000000", "#7a4a28", "#c08850", "#f0c090"]},
         ]})
     scenes.append({
-        "name": "title", "detect": {"all": [25, 26], "none": [22, 29]},
+        "name": "title", "detect": {"all": [25, 26, 31], "none": [22, 29]},
         "worlds": [
             {"world": 28, "label": "logo",     "ramp": ["#000000", "#a01800", "#e85820", "#ffd040"]},
             {"world": 31, "label": "court",    "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"]},
