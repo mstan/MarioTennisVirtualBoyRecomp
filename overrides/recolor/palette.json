@@ -1,157 +1,46 @@
 {
-  "_comment": "World-based recolor pack (build_palette.py, scene=match); animation-stable.",
-  "worlds": [
+  "_comment": "Scene-aware world recolor pack for Mario's Tennis. Each scene is detected by the set of VIP worlds on screen (detect.all must all be present, detect.none must be absent); the first match wins. World indices are stable within a scene's animation but differ across scenes, so rules are grouped per scene. Animation-stable (keyed on world index, not tile content).",
+  "scenes": [
     {
-      "world": 30,
-      "label": "skyline",
-      "bbox": [
-        0,
-        32,
-        383,
-        95
-      ],
-      "ramp": [
-        "#000000",
-        "#1a2240",
-        "#34406a",
-        "#5a6aa0"
+      "name": "match",
+      "detect": { "all": [22] },
+      "worlds": [
+        { "world": 30, "label": "skyline", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"] },
+        { "world": 28, "label": "court",   "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"] },
+        { "world": 21, "label": "sky",     "ramp": ["#000000", "#102050", "#2848a0", "#4070e0"] },
+        { "world": 20, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"] },
+        { "world": 19, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"] },
+        { "world": 26, "label": "opponent","ramp": ["#000000", "#3a2410", "#7a5020", "#b88030"] },
+        { "world": 22, "label": "mario", "bands": [
+          { "hi": 60,  "ramp": ["#000000", "#7a0000", "#c81010", "#ff3030"] },
+          { "hi": 96,  "ramp": ["#000000", "#8a5a30", "#d59a60", "#f0c090"] },
+          { "hi": 150, "ramp": ["#000000", "#7a0000", "#c81010", "#ff3030"] },
+          { "hi": 208, "ramp": ["#000000", "#101878", "#2030b0", "#3048e0"] },
+          { "hi": 256, "ramp": ["#000000", "#3a2410", "#6a4420", "#8a5a2a"] }
+        ] }
       ]
     },
     {
-      "world": 28,
-      "label": "court",
-      "bbox": [
-        0,
-        112,
-        302,
-        195
-      ],
-      "ramp": [
-        "#000000",
-        "#0a4018",
-        "#1c7a30",
-        "#34c050"
+      "name": "mode_select",
+      "detect": { "all": [29], "none": [22] },
+      "worlds": [
+        { "world": 31, "label": "menu_text", "ramp": ["#000000", "#404040", "#909090", "#e8e8e8"] },
+        { "world": 28, "label": "mode_box",  "ramp": ["#000000", "#806000", "#c0a000", "#ffe040"] },
+        { "world": 29, "label": "roster_frame", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"] },
+        { "world": 30, "label": "roster_faces", "ramp": ["#000000", "#7a4a28", "#c08850", "#f0c090"] }
       ]
     },
     {
-      "world": 22,
-      "label": "mario",
-      "bbox": [
-        181,
-        141,
-        220,
-        204
-      ],
-      "bands": [
-        {
-          "hi": 60,
-          "ramp": [
-            "#000000",
-            "#7a0000",
-            "#c81010",
-            "#ff3030"
-          ]
-        },
-        {
-          "hi": 96,
-          "ramp": [
-            "#000000",
-            "#8a5a30",
-            "#d59a60",
-            "#f0c090"
-          ]
-        },
-        {
-          "hi": 150,
-          "ramp": [
-            "#000000",
-            "#7a0000",
-            "#c81010",
-            "#ff3030"
-          ]
-        },
-        {
-          "hi": 208,
-          "ramp": [
-            "#000000",
-            "#101878",
-            "#2030b0",
-            "#3048e0"
-          ]
-        },
-        {
-          "hi": 256,
-          "ramp": [
-            "#000000",
-            "#3a2410",
-            "#6a4420",
-            "#8a5a2a"
-          ]
-        }
-      ]
-    },
-    {
-      "world": 20,
-      "label": "opponent",
-      "bbox": [
-        5,
-        96,
-        116,
-        109
-      ],
-      "ramp": [
-        "#000000",
-        "#3a2410",
-        "#7a5020",
-        "#b88030"
-      ]
-    },
-    {
-      "world": 19,
-      "label": "opponent",
-      "bbox": [
-        293,
-        96,
-        380,
-        109
-      ],
-      "ramp": [
-        "#000000",
-        "#3a2410",
-        "#7a5020",
-        "#b88030"
-      ]
-    },
-    {
-      "world": 21,
-      "label": "sky",
-      "bbox": [
-        117,
-        20,
-        234,
-        66
-      ],
-      "ramp": [
-        "#000000",
-        "#102050",
-        "#2848a0",
-        "#4070e0"
-      ]
-    },
-    {
-      "world": 26,
-      "label": "opponent",
-      "bbox": [
-        126,
-        96,
-        142,
-        109
-      ],
-      "ramp": [
-        "#000000",
-        "#3a2410",
-        "#7a5020",
-        "#b88030"
+      "name": "title",
+      "detect": { "all": [25, 26], "none": [22, 29] },
+      "worlds": [
+        { "world": 28, "label": "logo",    "ramp": ["#000000", "#a01800", "#e85820", "#ffd040"] },
+        { "world": 31, "label": "court",   "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"] },
+        { "world": 30, "label": "net",     "ramp": ["#000000", "#505050", "#a8a8a8", "#f4f4f4"] },
+        { "world": 26, "label": "singles", "ramp": ["#000000", "#806000", "#c0a000", "#ffe040"] },
+        { "world": 25, "label": "doubles", "ramp": ["#000000", "#404040", "#909090", "#e0e0e0"] },
+        { "world": 24, "label": "cursor",  "ramp": ["#000000", "#7a0000", "#c81010", "#ff3030"] },
+        { "world": 23, "label": "copyright","ramp": ["#000000", "#303030", "#606060", "#909090"] }
       ]
     }
   ]
