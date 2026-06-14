@@ -27,16 +27,25 @@ import json, os, sys
 
 PLAYER_CHAR_ADDR = "0x0500203A"   # WRAM: P1 selected character index 0..6
 
+# Shared court furniture, reused by both the match and change-service scenes so
+# the colors never drift apart. world 30 = sky/skyline band, 28 = court, 24 =
+# net tape (a horizontal band ~y118-129).
+SKYLINE_RULE = {"world": 30, "label": "skyline", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"]}
+COURT_RULE   = {"world": 28, "label": "court",   "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"]}
+NET_RULE     = {"world": 24, "label": "net",     "ramp": ["#000000", "#606060", "#b0b0b0", "#f4f4f4"]}
+
 # Shared in-match scenery (same for every character). Only worlds whose index
 # reliably maps to the same element during a match are colored here. Worlds
-# 19/20/21/26 are deliberately left faithful: they draw the far opponent and the
-# sky during a rally but are reused for big score/CHANGE-SERVICE text on the
-# between-points screens, so coloring them bleeds onto that text (e.g. "PRINCESS"
-# rendered blue). World 24 is the net tape (a horizontal band ~y118-129).
+# 19/20/21/26 are deliberately left faithful in the MATCH scene: they draw the
+# far opponent and the sky during a rally but are reused for big
+# score/CHANGE-SERVICE text on the between-points screens, so coloring them in
+# the match scene bleeds onto that text (e.g. "PRINCESS" rendered blue). The
+# dedicated change-service scene below colors those text worlds, gated so it
+# only fires on the between-points screen (never during a rally).
 MATCH_SCENERY = [
-    {"world": 30, "label": "skyline", "ramp": ["#000000", "#1a2240", "#34406a", "#5a6aa0"]},
-    {"world": 28, "label": "court",   "ramp": ["#000000", "#0a4018", "#1c7a30", "#34c050"]},
-    {"world": 24, "label": "net",     "ramp": ["#000000", "#606060", "#b0b0b0", "#f4f4f4"]},
+    SKYLINE_RULE,
+    COURT_RULE,
+    NET_RULE,
     # "1 SET MATCH  X vs Y" intro text. Worlds 17-20 appear ONLY on the pre-match
     # intro (the rally and CHANGE-SERVICE screens use different world indices),
     # so coloring them here is bleed-free. w18 (left = P1 name) is colored per
@@ -137,8 +146,57 @@ def match_scene(index, name, bands):
             "worlds": rules}
 
 
+# --- Between-points CHANGE-SERVICE / CHANGE-ENDS / score screen ------------
+# After a game, play pauses on a screen showing "SET n", the running score
+# ("DONKEY 1"), and the prompts "CHANGE SERVICE" / "CHANGE ENDS". Captured world
+# map (attr=1 + world_map): world 21 = the big "SET n" + score header (center
+# top), world 20 = "CHANGE SERVICE" (left), world 19 = "CHANGE ENDS" (right),
+# world 26 = the small service icon between them; the court (28), net (24),
+# skyline (30) and the standing near player (22) are still on screen.
+#
+# These same world indices mean different things during a rally (19/20 absent,
+# 27 = live scoreboard present) and on the intro (17/18 = the "X vs Y" names
+# present), so the scene is gated all:[19,20] none:[17,18,27,29,31]: 19 AND 20
+# present excludes the rally (which has neither) and the menu/title; none:[17,18]
+# excludes the intro; none:[27] is belt-and-suspenders against a live point.
+# It must be ordered BEFORE the match scenes (which match on world 28 alone), so
+# it wins selection on the score screen. The score header name varies with who
+# won the game (we can't know it), so world 21 gets a neutral readable gold
+# rather than a per-character hue; the CHANGE prompts get a calm UI cyan.
+SCORE_GOLD = ["#000000", "#806000", "#c0a000", "#ffe040"]   # SET/score header (w21), icon (w26)
+UI_CYAN    = ["#000000", "#106868", "#20b0b0", "#48e8e8"]   # CHANGE SERVICE/ENDS prompts (w19/w20)
+
+SCORE_DETECT_ALL  = [19, 20]
+SCORE_DETECT_NONE = [17, 18, 27, 29, 31]
+
+def change_service_scene(index, name, bands):
+    """Score / CHANGE-SERVICE screen, self-contained (court+player+text). When
+    index is None, emits the no-ram fallback (any P1 character index)."""
+    rules = [
+        SKYLINE_RULE, COURT_RULE, NET_RULE,
+        # standing near player, colored per character exactly as in the match
+        {"world": 22, "label": name,
+         "bands": [{"hi": hi, "ramp": ramp} for hi, ramp in bands]},
+        {"world": 21, "label": "score_header",   "ramp": SCORE_GOLD},
+        {"world": 20, "label": "change_service", "ramp": UI_CYAN},
+        {"world": 19, "label": "change_ends",    "ramp": UI_CYAN},
+        {"world": 26, "label": "serve_icon",     "ramp": SCORE_GOLD},
+    ]
+    detect = {"all": SCORE_DETECT_ALL, "none": SCORE_DETECT_NONE}
+    if index is None:
+        return {"name": "change_service", "detect": detect, "worlds": rules}
+    detect["ram"] = {"addr": PLAYER_CHAR_ADDR, "eq": index}
+    return {"name": "change_service_" + name, "detect": detect, "worlds": rules}
+
+
 def build():
-    scenes = [match_scene(i, n, b) for i, n, b in CHARACTERS]
+    # Change-service / score scenes FIRST: they must win over the match scenes
+    # (which key on world 28 alone, present on the score screen too). Per
+    # character (gated on the P1 RAM byte) so the standing player is colored
+    # right, then a no-ram fallback for any unknown index.
+    scenes = [change_service_scene(i, n, b) for i, n, b in CHARACTERS]
+    scenes.append(change_service_scene(None, "mario", CHARACTERS[0][2]))
+    scenes += [match_scene(i, n, b) for i, n, b in CHARACTERS]
     # fallback: any unknown P1 index still gets a colored (Mario) match
     fallback = match_scene(0, "mario", CHARACTERS[0][2])
     fallback["name"] = "match"
