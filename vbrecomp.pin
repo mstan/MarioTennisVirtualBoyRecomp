@@ -33,5 +33,5 @@
 # The gitlink SHA must exist on the submodule's remote, or `submodule update`
 # fails for everyone else — push vbrecomp before pinning to its commit.
 
-branch = feat/shadow-enhancements
-sha    = beb104caa5a7b0b44c589af6d601b862a1d24504
+branch = master
+sha    = 37a244423c2a2d26b0b2c536336575425ad1c11e

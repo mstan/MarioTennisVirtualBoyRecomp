@@ -52,6 +52,7 @@ verify*.png
 worlds.json
 vb_last_run_report.json
 vb_freeze_dump_*.json
+vb_freeze_heartbeat_*.json
 starvation_dump.jsonl
 
 # Release staging (built locally for upload, not checked in)
