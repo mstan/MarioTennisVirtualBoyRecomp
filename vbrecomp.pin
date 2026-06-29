@@ -34,4 +34,4 @@
 # fails for everyone else — push vbrecomp before pinning to its commit.
 
 branch = master
-sha    = 37a244423c2a2d26b0b2c536336575425ad1c11e
+sha    = b7b3d4a5324a6a6872d8cb2fcff147948e75dddd
