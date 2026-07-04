@@ -178,3 +178,13 @@ This is a **static recompiler**, not an emulator. The V810 machine code in the c
 The recompiler, runtime, and tooling are MIT (see [`vbrecomp/LICENSE`](https://github.com/mstan/vbrecomp/blob/master/LICENSE) and [`LICENSE.md`](LICENSE.md)).
 
 Mario's Tennis is © 1995 Nintendo. This project does not include or distribute any copyrighted ROM content. Provide your own cart dump.
+
+---
+
+<p align="center">
+  <sub><b>R.A.I.D. — Retro AI Development</b> · a Discord for AI-assisted retro reverse-engineering, decomp &amp; recomp</sub>
+</p>
+
+<p align="center">
+  <a href="https://discord.gg/Ad9BwSzctP"><img src=".github/raid-discord.png" alt="Join the Retro AI Development (R.A.I.D.) Discord" width="200"></a>
+</p>
