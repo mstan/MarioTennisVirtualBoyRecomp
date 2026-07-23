@@ -48,4 +48,5 @@ if(NOT EXISTS "${CMAKE_SOURCE_DIR}/vbrecomp/CMakeLists.txt")
         "  git clone git@github.com:mstan/vbrecomp.git vbrecomp")
 endif()
 
+include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)
 add_subdirectory(vbrecomp)
