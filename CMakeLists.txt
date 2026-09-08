@@ -74,16 +74,17 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME tennis-materials COMMAND tennis-materials-test
         "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color/materials.bin"
-        "${CMAKE_CURRENT_BINARY_DIR}/invalid-materials-test.bin")
+        "${CMAKE_CURRENT_BINARY_DIR}/invalid-materials-test.bin"
+        "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color/hud-materials.bin")
 endif()
 
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
-    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.2.0.vbmod")
+    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.2.1.vbmod")
     add_custom_command(OUTPUT "${_color_package}"
         COMMAND "${Python3_EXECUTABLE}" "${VBRECOMP_ROOT}/tools/pack_mod.py"
                 "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color" "${_color_package}"
-        DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt mods/full-color/materials.bin
+        DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt mods/full-color/materials.bin mods/full-color/hud-materials.bin
                 "${VBRECOMP_ROOT}/tools/pack_mod.py"
         VERBATIM)
     add_custom_target(mario-tennis-mods DEPENDS "${_color_package}")

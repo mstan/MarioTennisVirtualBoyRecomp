@@ -5,7 +5,7 @@
 #include <vector>
 
 int main(int argc,char** argv) {
-    assert(argc==3);
+    assert(argc==4);
     tennis::Materials catalog;
     assert(catalog.load(argv[1]) && !catalog.tiles.empty());
     const auto count=catalog.tiles.size();
@@ -16,7 +16,12 @@ int main(int argc,char** argv) {
     const Landmark landmarks[]={
         {8,8,0x7a9095b4u,7,1,2}, {8,10,0x1ff57941u,7,6,13},
         {8,12,0xd58f91f5u,0,3,19}, {8,13,0x8a304e94u,7,4,4},
-        {8,8,0xd58f91f5u,0,1,2}, {8,9,0x833b5c19u,6,1,2}};
+        {8,8,0xd58f91f5u,0,1,2}, {8,9,0x833b5c19u,6,1,2},
+        // User-reported new-round pose: previously almost entirely red.
+        {8,7,0x656ed016u,0,2,2}, {6,9,0x06fb002cu,1,5,3},
+        {6,10,0xd5793f17u,4,0,13}, {8,10,0x6684933cu,7,7,19},
+        {13,11,0xfaf62766u,2,2,6}, {6,13,0x6812d9c4u,4,2,4},
+        {8,14,0x46a48e9du,4,7,5}};
     for(const auto& point:landmarks) {
         auto it=catalog.tiles.find(tennis::Materials::key(0,point.x,point.y,point.hash));
         assert(it!=catalog.tiles.end());
@@ -39,5 +44,16 @@ int main(int argc,char** argv) {
     bytes=original;bytes[12+7*1024]=7;reject(bytes); // Unknown character ID.
     bytes=original;bytes[12+7*1024+8]=31;reject(bytes); // Invalid tile material.
     assert(catalog.load(argv[1]));
+    tennis::Materials hud;
+    assert(hud.load(argv[3]));
+    const Landmark lakitu[]={
+        {2,1,0x9392ddadu,0,6,1}, {2,2,0x6e84d35eu,0,6,16},
+        {3,0,0xd976ef9au,0,3,7}, {3,1,0x5860b881u,0,0,6},
+        {3,1,0x5860b881u,4,2,8}, {5,0,0xdcfe9b1au,0,2,5}};
+    for(const auto& point:lakitu) {
+        auto it=hud.tiles.find(tennis::Materials::key(0,point.x,point.y,point.hash));
+        assert(it!=hud.tiles.end());
+        assert((it->second[point.v*8+point.u]&31)==point.material);
+    }
     return 0;
 }

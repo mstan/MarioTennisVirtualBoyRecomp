@@ -4,6 +4,7 @@ roms/
 *.bin
 # Authored material labels and artwork fingerprints, not decoded ROM pixels.
 !mods/full-color/materials.bin
+!mods/full-color/hud-materials.bin
 
 # Build outputs
 build/

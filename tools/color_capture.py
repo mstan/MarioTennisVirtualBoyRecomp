@@ -177,6 +177,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--characters", default="0,1,2,3,4,5,6")
     parser.add_argument("--samples", type=int, default=220)
+    parser.add_argument("--frame-step", type=int, default=4)
     parser.add_argument("--port", type=int, default=4495)
     parser.add_argument("--opponent", type=int, choices=range(7))
     args = parser.parse_args()
@@ -264,7 +265,7 @@ def main():
                 direction = directions[(sample // 12) % len(directions)]
                 stroke = (4 if (sample // 10) % 2 == 0 else 8) if sample % 10 < 4 else 0
                 client.call("set_input", pad=direction | stroke)
-                client.advance(4)
+                client.advance(args.frame_step)
                 collect(client, poses, seen)
                 if sample % 40 == 0:
                     print("sample", sample, "unique poses", len(seen), flush=True)

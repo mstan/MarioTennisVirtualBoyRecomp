@@ -19,6 +19,7 @@ struct Palette {
 bool solid = true;
 int saturation = 100;
 tennis::Materials materials;
+tennis::Materials hud_materials;
 std::array<unsigned,20> material_overrides;
 const unsigned material_rgb[]={
     0x132439,0x242432,0xe83e34,0xf6bd86,0x3267ca,0x824c30,0xf6f5e9,
@@ -118,6 +119,12 @@ void render(const VbRenderFrame* frame, uint32_t* out, void*) {
             if(w) {
                 const auto& s=frame->sources[i];
                 if(actor_texel(s)) {out[i]=actor_color(s,ids);continue;}
+                if(s.map==1 && s.kind==0 && s.x>=16 && s.x<112 && s.y<35) {
+                    auto it=hud_materials.tiles.find(tennis::Materials::key(0,s.x/8,s.y/8,s.tile_hash));
+                    if(it!=hud_materials.tiles.end() && it->second[s.v*8+s.u]) {
+                        out[i]=material_color(it->second[s.v*8+s.u]);continue;
+                    }
+                }
                 brightness=shades[level];
                 if(s.map==1 && s.y>=96 && s.y<112) color=palette.net;
                 else if(s.map==1 && s.y>=352 && s.y<432) color=palette.scenery;
@@ -143,9 +150,11 @@ void render(const VbRenderFrame* frame, uint32_t* out, void*) {
 void activate() {
     palette=Palette{}; solid=true; saturation=100;
     materials=tennis::Materials{};
+    hud_materials=tennis::Materials{};
     material_overrides.fill(0x1000000);
     char value[1024];
     if(vb_mod_asset("materials.bin",value,sizeof(value)))materials.load(value);
+    if(vb_mod_asset("hud-materials.bin",value,sizeof(value)))hud_materials.load(value);
     if(vb_mod_option("solid_surfaces",value,sizeof(value))) solid=std::string(value)=="true";
     if(vb_mod_option("saturation",value,sizeof(value))) saturation=std::clamp(std::atoi(value),0,100);
     if(vb_mod_asset("palette.txt",value,sizeof(value))) {

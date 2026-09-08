@@ -1,6 +1,6 @@
 format_version = 1
 id = "marios-tennis.full-color"
-version = "0.2.0"
+version = "0.2.1"
 name = "Mario Tennis Full Color"
 author = "Mario Tennis Recomp contributors"
 description = "Full color for characters, portraits and courts without changing your original ROM."

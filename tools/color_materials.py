@@ -745,6 +745,11 @@ def main():
     a.add_argument("portraits", type=Path)
     a.add_argument("output", type=Path)
     a.add_argument("--extra-capture", type=Path, action="append", default=[])
+    a.add_argument(
+        "--base-catalog",
+        type=Path,
+        help="Keep previously reviewed texels while adding new captures",
+    )
     args = a.parse_args()
     portraits = json.loads(args.portraits.read_text())
     pm = [portrait(c, p) for c, p in enumerate(portraits)]
@@ -758,6 +763,18 @@ def main():
         )
     image.save(args.capture / "colored-portraits.png")
     records = {}
+    baseline = {}
+    if args.base_catalog:
+        data = args.base_catalog.read_bytes()
+        if data[:8] != b"VBMAT002" or len(data) < 12:
+            raise ValueError("Invalid base catalog")
+        count = struct.unpack_from("<I", data, 8)[0]
+        if len(data) != 12 + 7 * 1024 + 72 * count:
+            raise ValueError("Invalid base catalog length")
+        for offset in range(12 + 7 * 1024, len(data), 72):
+            key = struct.unpack_from("<BBBBI", data, offset)
+            baseline[key] = data[offset + 8 : offset + 72]
+            records[key] = collections.Counter()
     counts = collections.Counter()
     for c in range(7):
         paths = {
@@ -826,7 +843,10 @@ def main():
                 for candidate, count in votes.items():
                     if candidate[i]:
                         choices[candidate[i]] += count
-                mask.append(choices.most_common(1)[0][0] if choices else 0)
+                reviewed = baseline.get((c, n, x, y, h), bytes(64))[i]
+                mask.append(
+                    reviewed or (choices.most_common(1)[0][0] if choices else 0)
+                )
             f.write(struct.pack("<BBBBI", c, n, x, y, h))
             f.write(bytes(mask))
     print("Material tiles:", len(records), "pose coverage:", dict(counts))

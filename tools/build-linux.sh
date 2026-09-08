@@ -175,7 +175,7 @@ cp -R "$(dirname "$BIN")/assets" "$APPDIR/usr/bin/assets"
 mkdir -p "$APPDIR/usr/share/licenses/$SLUG"
 cp "$REPO/LICENSE.md" "$APPDIR/usr/share/licenses/$SLUG/game-MIT.txt"
 cp "$REPO/vbrecomp/runtime/licenses/snes-mod-runtime.txt" "$APPDIR/usr/share/licenses/$SLUG/"
-cp "$BUILD/mod-packages/marios-tennis-full-color-0.2.0.vbmod" "$OUT/"
+cp "$BUILD/mod-packages/marios-tennis-full-color-0.2.1.vbmod" "$OUT/"
 
 # Custom AppRun: bundle libs, read the controller natively on a Steam Deck, find
 # the ROM next to the .AppImage, run from the ROM's folder so saves land there.

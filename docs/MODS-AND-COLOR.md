@@ -22,12 +22,12 @@ cmake --build build --target vb-runtime mario-tennis-mods
 ```
 
 In **Mods**, install
-`build/mod-packages/marios-tennis-full-color-0.2.0.vbmod`, enable **Full-color
+`build/mod-packages/marios-tennis-full-color-0.2.1.vbmod`, enable **Full-color
 renderer**, and Play. It defaults off when first installed. To do the
 same from the command line:
 
 ```powershell
-.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.2.0.vbmod --enable-mod marios-tennis.full-color:full-color
+.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.2.1.vbmod --enable-mod marios-tennis.full-color:full-color
 ```
 
 Use `--install-mod` only once per version. Later runs retain the selection.
@@ -121,9 +121,9 @@ duplicate keys, truncation and trailing data before replacing an active catalog.
 Run the owner-ROM integration checks against a debug-tools build:
 
 ```powershell
-python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod build/color-check
-python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod build/ui-check
-python tools/validate_materials.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod mods/full-color/materials.bin build/material-check
+python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod build/color-check
+python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod build/ui-check
+python tools/validate_materials.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod mods/full-color/materials.bin build/material-check
 ```
 
 The first follows a deterministic boot/service/rally route, compares both raw
@@ -156,3 +156,34 @@ not constitute a new full-game Beetle oracle comparison or physical-gamepad test
 Linux/macOS packaging scripts were updated for the executable name, launcher
 assets, mod archive, notices, and writable profiles; their shell syntax was
 checked on Windows, but native Linux/macOS builds were not run.
+
+
+### 0.2.1 gameplay follow-up
+
+A user capture exposed a new-round Mario pose with only 312 of 2,374 visible
+character texels covered by the original catalog. Version 0.2.1 adds 184 Mario
+and 37 Luigi tile records (12,934 total), including this pose and overhead
+strokes. Previously reviewed nonzero character annotations are preserved.
+`color_materials.py --base-catalog previous-materials.bin` supports this additive
+workflow; new captures fill missing entries without voting over reviewed colors.
+
+Lakitu now has a separate `hud-materials.bin` asset using the same validated
+container. Its character-0 namespace identifies scoreboard artwork, independently
+of the player catalog. Source positions and original tile fingerprints identify
+both facing directions; yellow skin, green shell, glasses, fishing rod, cloud
+and outlines are authored in original sprite coordinates. Run `color_hud.py
+OUTPUT SOURCES...` on private TCP source dumps to extend this asset.
+
+The validator accepts `--frame-step` to exercise a different input cadence and
+`--hud-materials` to check the referee. It reports distinct source pixel images
+and the longest unchanged run, and rejects long runs of repeated static images.
+Missing referee frames are retained as private `hud-missing-*.src` captures.
+Frame counts alone do not establish point, round, or full-match coverage.
+The owner-reported reference pose also has permanent cap, skin, hair, shirt,
+shorts, glove and shoe material landmarks in the ROM-free CTest.
+
+The final 0.2.1 replay checks 240 samples at a 12-frame input cadence, in both
+eyes, including the later overhead pose. Character and referee material coverage
+are both 100% in this route. See `color-round-validation.json` for counts and
+hashes, and `color-round.png` for an actual TCP screenshot. ROM, native images,
+WRAM, CPU registers and subsequent play remain equal in the off/on comparison.

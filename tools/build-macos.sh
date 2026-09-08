@@ -95,7 +95,7 @@ cp -R "$(dirname "$BIN")/assets" "$APPDIR/Contents/Resources/assets"
 mkdir -p "$APPDIR/Contents/Resources/licenses"
 cp "$REPO/LICENSE.md" "$APPDIR/Contents/Resources/licenses/game-MIT.txt"
 cp "$REPO/vbrecomp/runtime/licenses/snes-mod-runtime.txt" "$APPDIR/Contents/Resources/licenses/"
-cp "$BUILD/mod-packages/marios-tennis-full-color-0.2.0.vbmod" "$OUT/"
+cp "$BUILD/mod-packages/marios-tennis-full-color-0.2.1.vbmod" "$OUT/"
 cat > "$APPDIR/Contents/MacOS/$APP_NAME" <<EOF
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"

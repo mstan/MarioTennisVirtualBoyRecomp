@@ -4,6 +4,7 @@ Owner ROM required. Output screenshots/source dumps are private game artwork.
 
 import argparse
 import collections
+import hashlib
 import json
 import socket
 import struct
@@ -34,12 +35,15 @@ def main():
         parser.add_argument(name, type=Path)
     parser.add_argument("--characters", default="0,1,2,3,4,5,6")
     parser.add_argument("--samples", type=int, default=360)
+    parser.add_argument("--frame-step", type=int, default=4)
+    parser.add_argument("--hud-materials", type=Path)
     parser.add_argument("--port", type=int, default=4497)
     parser.add_argument("--opponent", type=int, choices=range(7))
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     table = catalog(args.materials)
+    hud = catalog(args.hud_materials) if args.hud_materials else None
     client = Client(args.port)
     report = []
     try:
@@ -77,8 +81,12 @@ def main():
         )
         frames = []
         coverage = []
+        hud_coverage = []
         missing = collections.Counter()
         near_worlds = set()
+        source_frames = set()
+        previous_source = None
+        unchanged = max_unchanged = 0
         try:
             deadline = time.monotonic() + 20
             while True:
@@ -126,14 +134,41 @@ def main():
                 direction = directions[(sample // 12) % len(directions)]
                 stroke = (4 if (sample // 10) % 2 == 0 else 8) if sample % 10 < 4 else 0
                 client.call("set_input", pad=direction | stroke)
-                client.advance(4)
+                client.advance(args.frame_step)
+                ids = struct.unpack("<4H", client.read(0x0500203A, 8))
                 for eye in range(2):
                     dump = folder / "current.src"
                     client.call("source_dump", path=dump.as_posix(), eye=eye)
+                    if eye == 0:
+                        # Ignore CHR allocation and world-number changes that
+                        # can accompany an otherwise identical displayed image.
+                        pixels = bytes(
+                            s[8] | (4 if s[9] else 0)
+                            for s in struct.iter_unpack(
+                                "<IHHHBBBBBB", dump.read_bytes()[24:]
+                            )
+                        )
+                        signature = hashlib.sha256(pixels).digest()
+                        source_frames.add(signature)
+                        unchanged = unchanged + 1 if signature == previous_source else 0
+                        max_unchanged = max(max_unchanged, unchanged)
+                        previous_source = signature
                     known = total = 0
+                    hud_known = hud_total = 0
                     for h, x, y, t, u, v, m, k, r, w in struct.iter_unpack(
                         "<IHHHBBBBBB", dump.read_bytes()[24:]
                     ):
+                        if (
+                            hud is not None
+                            and w
+                            and m == 1
+                            and k == 0
+                            and 16 <= x < 112
+                            and y < 35
+                        ):
+                            hud_total += 1
+                            mask = hud.get((0, x // 8, y // 8, h))
+                            hud_known += bool(mask and mask[v * 8 + u])
                         if not w or m != 0 or x >= 512 or not 384 <= y < 512:
                             continue
                         c = ids[x // 128]
@@ -146,6 +181,12 @@ def main():
                             known += 1
                         else:
                             missing[key] += 1
+                    if hud_total:
+                        hud_coverage.append(hud_known / hud_total)
+                        if hud_known != hud_total:
+                            (folder / f"hud-missing-{sample:04}-{eye}.src").write_bytes(
+                                dump.read_bytes()
+                            )
                     if total:
                         ratio = known / total
                         if ratio < min(coverage, default=1):
@@ -194,6 +235,10 @@ def main():
                 character=character,
                 slots=ids,
                 samples=args.samples,
+                frame_step=args.frame_step,
+                distinct_source_frames=len(source_frames),
+                longest_unchanged_run=max_unchanged,
+                minimum_hud_coverage=min(hud_coverage, default=1.0),
                 eyes=2,
                 minimum_coverage=min(coverage),
                 mean_coverage=sum(coverage) / len(coverage),
@@ -212,7 +257,11 @@ def main():
                     duration=180,
                     loop=0,
                 )
-                selected = frames[:: max(1, len(frames) // 8)][:8]
+                count = min(8, len(frames))
+                selected = [
+                    frames[i * (len(frames) - 1) // max(1, count - 1)]
+                    for i in range(count)
+                ]
                 sheet = Image.new("RGB", (384 * 4, 224 * 2))
                 for i, im in enumerate(selected):
                     sheet.paste(im, (i % 4 * 384, i // 4 * 224))
@@ -232,6 +281,12 @@ def main():
     assert all(r["minimum_coverage"] >= 0.99 for r in report), (
         "Uncatalogued animation pixels; inspect validation.json"
     )
+    assert all(r["minimum_hud_coverage"] >= 0.99 for r in report), (
+        "Uncatalogued Lakitu pixels"
+    )
+    assert all(
+        r["longest_unchanged_run"] < max(60, r["samples"] // 2) for r in report
+    ), "Repeated static frames do not validate additional animation coverage"
     print(
         "PASS: both eyes, material coverage and paused TCP screenshots; inspect saved animation/contact sheets",
         flush=True,
