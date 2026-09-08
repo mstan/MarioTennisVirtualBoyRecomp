@@ -1,37 +1,7 @@
-# vbrecomp.pin — pins which vbrecomp framework commit this game builds against.
-#
-# PIN MECHANISM
-# -------------
-# The authoritative pin is the SUBMODULE GITLINK recorded for `vbrecomp/`
-# (see .gitmodules). The committed gitlink SHA *is* the version this game
-# builds and ships against; a fresh `git submodule update --init` checks out
-# exactly that commit. This file is the human-readable mirror of that gitlink
-# (kept in sync) plus the local-dev story below.
-#
-# LOCAL DEV (Windows): the working-tree `vbrecomp/` is a directory JUNCTION to
-# a single shared clone so edits to the framework are live across every game
-# repo at once, with no per-repo copy to keep in sync:
-#
-#     # from this repo's root, once:
-#     cmd /c rmdir vbrecomp                 # if a real submodule checkout exists
-#     New-Item -ItemType Junction -Path vbrecomp `
-#         -Target F:\Projects\virtualboyrecomp\vbrecomp
-#
-# The junction resolves to a real git repo, so the submodule gitlink still
-# reads correctly; CI / fresh clones without the junction get a normal
-# submodule checkout at the pinned SHA instead.
-#
-# ROLL THE PIN FORWARD
-# --------------------
-#   1. Commit (and push) the new framework commit in vbrecomp.
-#   2. In this repo, re-point the gitlink to it and update `sha` below:
-#        git -C vbrecomp rev-parse HEAD                 # the new SHA
-#        git update-index --add --cacheinfo 160000,<sha>,vbrecomp
-#        # (or `git add vbrecomp` when vbrecomp/ is a real submodule checkout)
-#   3. Commit this file + the gitlink together.
-#
-# The gitlink SHA must exist on the submodule's remote, or `submodule update`
-# fails for everyone else — push vbrecomp before pinning to its commit.
-
-branch = master
-sha    = b7b3d4a5324a6a6872d8cb2fcff147948e75dddd
+# The vbrecomp/ submodule gitlink is the authoritative framework pin.
+# This file mirrors it for people and tooling.
+# Local development uses CMake -DVBRECOMP_ROOT and -DRECOMP_UI_ROOT with
+# separate worktrees. Do not delete submodules or create directory junctions.
+# Publish the dependency commit before rolling its gitlink, then update sha.
+branch = codex/mods-ui-color-20260908
+sha = d013d738b80530bafc98f8ab2f2d32fd9e902227

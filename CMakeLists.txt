@@ -41,12 +41,37 @@ set(VBRECOMP_GAME "marios_tennis" CACHE STRING
     "Module name of a vbrecomp codegen output to link into vb-runtime."
     FORCE)
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/vbrecomp/CMakeLists.txt")
+set(VBRECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/vbrecomp" CACHE PATH "vbrecomp checkout")
+set(RECOMP_UI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/recomp-ui" CACHE PATH "Shared UI checkout")
+option(MARIO_TENNIS_UI "Build the shared launcher and in-game settings" ON)
+if(NOT EXISTS "${VBRECOMP_ROOT}/CMakeLists.txt")
     message(FATAL_ERROR
         "vbrecomp/ subdirectory missing — the framework is a separate "
         "git repo. Clone it into this directory first:\n"
         "  git clone git@github.com:mstan/vbrecomp.git vbrecomp")
 endif()
 
-include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)
-add_subdirectory(vbrecomp)
+if(MARIO_TENNIS_UI)
+    set(RECOMP_UI_ENABLE_MODS ON CACHE BOOL "Mario Tennis mod catalog" FORCE)
+    include("${RECOMP_UI_ROOT}/recomp_ui.cmake")
+endif()
+add_subdirectory("${VBRECOMP_ROOT}" vbrecomp)
+target_compile_definitions(vb-runtime PRIVATE
+    VB_GAME_ID="marios-tennis"
+    VB_GAME_TITLE="Mario's Tennis Recompiled"
+    VB_GAME_SHA256="5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101"
+    VB_GAME_CRC32=0x7CE7460Du)
+set_target_properties(vb-runtime PROPERTIES OUTPUT_NAME MarioTennisVirtualBoyRecomp)
+target_sources(vb-runtime PRIVATE src/tennis_color.cpp)
+
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.1.0.vbmod")
+    add_custom_command(OUTPUT "${_color_package}"
+        COMMAND "${Python3_EXECUTABLE}" "${VBRECOMP_ROOT}/tools/pack_mod.py"
+                "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color" "${_color_package}"
+        DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt
+                "${VBRECOMP_ROOT}/tools/pack_mod.py"
+        VERBATIM)
+    add_custom_target(mario-tennis-mods DEPENDS "${_color_package}")
+endif()

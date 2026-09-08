@@ -3,6 +3,10 @@
 Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native Windows binary.
 Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 
+This branch adds a shared launcher, persistent controls/settings, a ROM-preserving
+mod catalog, and an opt-in full-color renderer spike. See [Mods and color](docs/MODS-AND-COLOR.md)
+for installation, palette authoring, validation, and the experiment's limitations.
+
 > **Status: Playable.** A full match against the CPU completes without crashes. Audio, video, and input are all wired. Pixel-perfect on the title/warning screen versus the Beetle VB reference (0 / 86 016 pixels differ at zero tolerance).
 
 <p align="center"><img src="baseline-title-screen-3x.png" alt="Mario's Tennis title screen" width="600"></p>
@@ -12,6 +16,9 @@ Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 ## For players
 
 ### Quick start
+
+Existing release downloads predate this branch's mod/UI/color work. Build from
+source below to try this experiment; a new release has not been published.
 
 1. Download `MarioTennisVirtualBoyRecomp-windows-x64.zip` from [Releases](../../releases).
 2. Extract anywhere (you'll get `MarioTennisVirtualBoyRecomp.exe`, `SDL2.dll`, `README.txt`).
@@ -36,13 +43,13 @@ Keyboard:
 | L / R         | Q / E          |
 | Start / Select| Enter / Right Shift |
 | Turbo         | TAB (skip 50.27 Hz pacing) |
-| Quit          | Esc            |
+| Settings menu | Esc (UI builds); close the window to quit |
 
 Xbox controller (XInput, player 1):
 
 | Virtual Boy   | Xbox             |
 |---------------|------------------|
-| Left D-pad    | D-pad or left stick |
+| Left D-pad    | D-pad (rebindable in launcher) |
 | Right D-pad   | Right stick      |
 | A / B         | A / B            |
 | L / R         | LB / RB          |
@@ -96,39 +103,35 @@ MarioTennisVirtualBoyRecomp/
 
 ### Build from source
 
-Prerequisites: Windows 10+, MSYS2 with mingw-w64-x86_64 toolchain (gcc, ninja, cmake, SDL2), Python 3.10+, `tomli` (`pip install tomli`).
+Prerequisites: Windows 10+, MSYS2 MinGW64 GCC, Ninja, CMake and SDL2, plus
+Python 3.10+ (`tomli` is needed only on Python 3.10). Initialize both pinned
+submodules with `git submodule update --init --recursive`.
 
 ```powershell
 $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-cd F:\Projects\virtualboyrecomp\MarioTennisVirtualBoyRecomp
-
-# 1. Clone the framework as a sibling subdirectory at the pinned SHA
-git clone git@github.com:mstan/vbrecomp.git vbrecomp
-$pin = (Select-String "^sha\s*=\s*(.*)$" vbrecomp.pin).Matches[0].Groups[1].Value.Trim()
-git -C vbrecomp checkout $pin
-
-# 2. Drop the cart dump into roms/
-mkdir roms -Force
-Copy-Item <wherever>\marios_tennis.vb roms\marios_tennis.vb
-
-# 3. Regenerate the recompiled C from the cart (Python, no compilation yet)
-Push-Location vbrecomp
-python -m recompiler.cli.vbrecomp_codegen `
-    --rom ..\roms\marios_tennis.vb `
-    --module marios_tennis `
-    --out ..\generated\ `
-    --seeds-toml ..\marios_tennis.toml
-Pop-Location
-
-# 4. Configure + build
-cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target vb-runtime
-
-# 5. Run
-.\build\vbrecomp\runtime\vb-runtime.exe --rom roms\marios_tennis.vb
+& 'C:/msys64/mingw64/bin/cmake.exe' -S . -B build -G Ninja `
+    -DCMAKE_BUILD_TYPE=Release `
+    -DCMAKE_MAKE_PROGRAM=C:/msys64/mingw64/bin/ninja.exe `
+    -DCMAKE_C_COMPILER=C:/msys64/mingw64/bin/gcc.exe `
+    -DCMAKE_CXX_COMPILER=C:/msys64/mingw64/bin/g++.exe
+& 'C:/msys64/mingw64/bin/cmake.exe' --build build --target vb-runtime mario-tennis-mods
+.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb
 ```
 
-The framework's pin check refuses to configure if `vbrecomp/` is at a different commit than `vbrecomp.pin`. Roll the pin forward by editing the SHA, checking out, and committing.
+For separate development worktrees, pass `-DVBRECOMP_ROOT=/path/to/vbrecomp`
+and `-DRECOMP_UI_ROOT=/path/to/recomp-ui` at configure time. No directory junctions
+or submodule deletion are needed. `-DMARIO_TENNIS_UI=OFF` omits the launcher/menu;
+package flags and the game renderer still work. `-DVBRECOMP_DEBUG_TOOLS=OFF`
+removes TCP tooling for production. `--paused` requires debug tools.
+
+Generated C is committed. To reproduce it, run from the framework checkout:
+
+```powershell
+python -m recompiler.cli.vbrecomp_codegen --rom /path/to/marios_tennis.vb --module marios_tennis --out /path/to/game/generated --seeds-toml /path/to/game/marios_tennis.toml
+```
+
+The submodule gitlinks are authoritative dependency pins; `vbrecomp.pin` mirrors
+the framework SHA. The color package contains no game artwork or ROM bytes.
 
 ### Beetle VB oracle (development only)
 

@@ -33,6 +33,7 @@ set -euo pipefail
 # The ONLY block that differs between games. Copy this file + edit just this header.
 APP_NAME="MariosTennis"
 CMAKE_TARGET="vb-runtime"
+BINARY_NAME="MarioTennisVirtualBoyRecomp"
 ROM_EXTS="vb"                              # AppRun auto-finds *.vb next to the AppImage
 EXTRA_ARGS=""
 REGEN_CMD=""                               # generated C is committed; regen is the P3 codegen (PowerShell)
@@ -117,15 +118,15 @@ fi
 echo "[1/3] configure ($CONFIG: ${FLAGS[*]})"
 cmake -S "$REPO" -B "$BUILD" -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release "${FLAGS[@]}"
 echo "[2/3] build ($CMAKE_TARGET, -j$JOBS)"
-cmake --build "$BUILD" --target "$CMAKE_TARGET" -j"$JOBS"
+cmake --build "$BUILD" --target "$CMAKE_TARGET" mario-tennis-mods -j"$JOBS"
 
 # Locate the produced ELF by magic (the NTFS mount marks every file executable,
 # so the exec bit is meaningless here).
 BIN=""
 while IFS= read -r f; do
-  if [ "$(basename "$f")" = "$CMAKE_TARGET" ] && file -b "$f" 2>/dev/null | grep -q "ELF.*executable"; then BIN="$f"; break; fi
+  if [ "$(basename "$f")" = "$BINARY_NAME" ] && file -b "$f" 2>/dev/null | grep -q "ELF.*executable"; then BIN="$f"; break; fi
 done < <(find "$BUILD" -maxdepth 3 -type f)
-[ -n "$BIN" ] || { echo "ERROR: no ELF named '$CMAKE_TARGET' under $BUILD" >&2; exit 1; }
+[ -n "$BIN" ] || { echo "ERROR: no ELF named '$BINARY_NAME' under $BUILD" >&2; exit 1; }
 echo "      ELF: $BIN ($(du -h "$BIN" | cut -f1))"
 
 if [ "$DO_PACKAGE" = "0" ]; then echo "      (--no-package) done."; exit 0; fi
@@ -169,6 +170,13 @@ EOF
 $LINUXDEPLOY --appdir "$APPDIR" --executable "$BIN" \
     --desktop-file "$WORK/$SLUG.desktop" --icon-file "$WORK/$SLUG.png"
 
+# The launcher loads assets beside the executable; retain the package license.
+cp -R "$(dirname "$BIN")/assets" "$APPDIR/usr/bin/assets"
+mkdir -p "$APPDIR/usr/share/licenses/$SLUG"
+cp "$REPO/LICENSE.md" "$APPDIR/usr/share/licenses/$SLUG/game-MIT.txt"
+cp "$REPO/vbrecomp/runtime/licenses/snes-mod-runtime.txt" "$APPDIR/usr/share/licenses/$SLUG/"
+cp "$BUILD/mod-packages/marios-tennis-full-color-0.1.0.vbmod" "$OUT/"
+
 # Custom AppRun: bundle libs, read the controller natively on a Steam Deck, find
 # the ROM next to the .AppImage, run from the ROM's folder so saves land there.
 rm -f "$APPDIR/AppRun"   # linuxdeploy leaves it a symlink to the real exe
@@ -189,10 +197,10 @@ for ext in $ROM_EXTS; do
 done
 cd "\$ROMDIR" 2>/dev/null || true
 if [ "\$#" -eq 0 ]; then
-    [ -n "\$ROM" ] && exec "\$HERE/usr/bin/$EXE" "\$ROM"
-    exec "\$HERE/usr/bin/$EXE" $EXTRA_ARGS
+    [ -n "\$ROM" ] && exec "\$HERE/usr/bin/$EXE" --config "\$ROMDIR/vbrecomp.cfg" --mods-dir "\$ROMDIR/mods" --rom "\$ROM"
+    exec "\$HERE/usr/bin/$EXE" --config "\$ROMDIR/vbrecomp.cfg" --mods-dir "\$ROMDIR/mods" $EXTRA_ARGS
 fi
-exec "\$HERE/usr/bin/$EXE" "\$@"
+exec "\$HERE/usr/bin/$EXE" --config "\$ROMDIR/vbrecomp.cfg" --mods-dir "\$ROMDIR/mods" "\$@"
 EOF
 chmod +x "$APPDIR/AppRun"
 

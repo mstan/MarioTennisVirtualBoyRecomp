@@ -1,0 +1,41 @@
+format_version = 1
+id = "marios-tennis.full-color"
+version = "0.1.0"
+name = "Mario Tennis Full Color"
+author = "Mario Tennis Recomp contributors"
+description = "Experimental game-owned color renderer; no ROM patches or bundled game assets."
+license = "MIT"
+
+[[target]]
+game_id = "marios-tennis"
+rom_sha256 = "5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101"
+
+[[feature]]
+id = "full-color"
+name = "Full-color renderer (spike)"
+description = "Color palettes and solid sky/court surfaces from native drawing layers. Approximate Mario/opponent colors; not a finished restoration."
+group = "Video"
+channel = "experimental"
+default_enabled = false
+
+[[plugin]]
+feature = "full-color"
+id = "marios-tennis.full-color"
+
+[[option]]
+feature = "full-color"
+id = "solid_surfaces"
+label = "Solid sky and court"
+description = "Fill native transparent background regions with colored surfaces."
+type = "boolean"
+default = true
+
+[[option]]
+feature = "full-color"
+id = "saturation"
+label = "Color saturation"
+type = "integer"
+default = 100
+min = 0
+max = 100
+step = 5

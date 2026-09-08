@@ -1,0 +1,12 @@
+sky 64bfea
+grass 36734d
+court 3484ad
+scenery 56a45e
+lines f4f0d1
+net f4efdf
+cap e44338
+skin f5ba79
+shirt e44338
+trousers 3975dc
+shoes 744734
+opponent a97a49

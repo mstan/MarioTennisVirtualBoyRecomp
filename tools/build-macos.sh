@@ -23,6 +23,7 @@ set -euo pipefail
 # ============================ PER-GAME CONFIG ===============================
 APP_NAME="MariosTennis"
 CMAKE_TARGET="vb-runtime"
+BINARY_NAME="MarioTennisVirtualBoyRecomp"
 ROM_EXTS="vb"
 EXTRA_ARGS=""
 REGEN_CMD=""
@@ -76,10 +77,10 @@ echo "[1/4] configure"
 cmake -S "$REPO" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_OSX_ARCHITECTURES="$OSX_ARCHS" "${FLAGS[@]}"
 echo "[2/4] build ($CMAKE_TARGET)"
-cmake --build "$BUILD" --target "$CMAKE_TARGET" -j"$(sysctl -n hw.ncpu)"
+cmake --build "$BUILD" --target "$CMAKE_TARGET" mario-tennis-mods -j"$(sysctl -n hw.ncpu)"
 
-BIN="$(find "$BUILD" -maxdepth 3 -type f -name "$CMAKE_TARGET" -perm +111 | head -1)"
-[ -n "$BIN" ] || { echo "ERROR: no binary named '$CMAKE_TARGET' under $BUILD" >&2; exit 1; }
+BIN="$(find "$BUILD" -maxdepth 3 -type f -name "$BINARY_NAME" -perm +111 | head -1)"
+[ -n "$BIN" ] || { echo "ERROR: no binary named '$BINARY_NAME' under $BUILD" >&2; exit 1; }
 echo "      bin: $BIN"
 
 echo "[3/4] bundle $APP_NAME.app"
@@ -90,6 +91,11 @@ mkdir -p "$APPDIR/Contents/MacOS" "$APPDIR/Contents/Resources" "$APPDIR/Contents
 # The real game binary lives next to a launcher that finds the ROM in the same
 # folder as the .app and runs from there (so saves land beside the .app).
 cp "$BIN" "$APPDIR/Contents/MacOS/$CMAKE_TARGET"
+cp -R "$(dirname "$BIN")/assets" "$APPDIR/Contents/Resources/assets"
+mkdir -p "$APPDIR/Contents/Resources/licenses"
+cp "$REPO/LICENSE.md" "$APPDIR/Contents/Resources/licenses/game-MIT.txt"
+cp "$REPO/vbrecomp/runtime/licenses/snes-mod-runtime.txt" "$APPDIR/Contents/Resources/licenses/"
+cp "$BUILD/mod-packages/marios-tennis-full-color-0.1.0.vbmod" "$OUT/"
 cat > "$APPDIR/Contents/MacOS/$APP_NAME" <<EOF
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
@@ -103,10 +109,10 @@ for ext in $ROM_EXTS; do
     for f in "\$APPDIR"/*."\$ext"; do [ -e "\$f" ] && ROM="\$f" && break 2; done
 done
 if [ "\$#" -eq 0 ]; then
-    [ -n "\$ROM" ] && exec "\$DIR/$CMAKE_TARGET" "\$ROM"
-    exec "\$DIR/$CMAKE_TARGET" $EXTRA_ARGS
+    [ -n "\$ROM" ] && exec "\$DIR/$CMAKE_TARGET" --config "\$APPDIR/vbrecomp.cfg" --mods-dir "\$APPDIR/mods" --rom "\$ROM"
+    exec "\$DIR/$CMAKE_TARGET" --config "\$APPDIR/vbrecomp.cfg" --mods-dir "\$APPDIR/mods" $EXTRA_ARGS
 fi
-exec "\$DIR/$CMAKE_TARGET" "\$@"
+exec "\$DIR/$CMAKE_TARGET" --config "\$APPDIR/vbrecomp.cfg" --mods-dir "\$APPDIR/mods" "\$@"
 EOF
 chmod +x "$APPDIR/Contents/MacOS/$APP_NAME"
 
