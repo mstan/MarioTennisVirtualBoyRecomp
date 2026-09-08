@@ -4,4 +4,4 @@
 # separate worktrees. Do not delete submodules or create directory junctions.
 # Publish the dependency commit before rolling its gitlink, then update sha.
 branch = codex/mods-ui-color-20260908
-sha = d013d738b80530bafc98f8ab2f2d32fd9e902227
+sha = 137ae3b9dce46febc65a21af558b0d95b16e5212

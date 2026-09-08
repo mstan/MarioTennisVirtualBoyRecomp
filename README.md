@@ -4,7 +4,7 @@ Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running 
 Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 
 This branch adds a shared launcher, persistent controls/settings, a ROM-preserving
-mod catalog, and an opt-in full-color renderer spike. See [Mods and color](docs/MODS-AND-COLOR.md)
+mod catalog, and an optional full-color renderer using the original artwork. See [Mods and color](docs/MODS-AND-COLOR.md)
 for installation, palette authoring, validation, and the experiment's limitations.
 
 > **Status: Playable.** A full match against the CPU completes without crashes. Audio, video, and input are all wired. Pixel-perfect on the title/warning screen versus the Beetle VB reference (0 / 86 016 pixels differ at zero tolerance).

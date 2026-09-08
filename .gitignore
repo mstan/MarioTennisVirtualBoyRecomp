@@ -2,6 +2,8 @@
 roms/
 *.vb
 *.bin
+# Authored material labels and artwork fingerprints, not decoded ROM pixels.
+!mods/full-color/materials.bin
 
 # Build outputs
 build/
@@ -60,6 +62,8 @@ release-stage/
 *.zip
 
 # Editor / OS
+__pycache__/
+.pytest_cache/
 .vscode/
 .idea/
 *.swp

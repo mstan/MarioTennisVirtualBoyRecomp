@@ -1,4 +1,4 @@
-# Mods, shared UI, and the full-color spike
+# Mods, shared UI, and the full-color renderer
 
 The game now uses recomp-ui for ROM selection, video/audio settings, both native
 D-pads, keyboard/controller bindings, and a versioned mod catalog. Press Escape
@@ -22,12 +22,12 @@ cmake --build build --target vb-runtime mario-tennis-mods
 ```
 
 In **Mods**, install
-`build/mod-packages/marios-tennis-full-color-0.1.0.vbmod`, enable **Full-color
-renderer (spike)**, and Play. It defaults off when first installed. To do the
+`build/mod-packages/marios-tennis-full-color-0.2.0.vbmod`, enable **Full-color
+renderer**, and Play. It defaults off when first installed. To do the
 same from the command line:
 
 ```powershell
-.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.1.0.vbmod --enable-mod marios-tennis.full-color:full-color
+.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.2.0.vbmod --enable-mod marios-tennis.full-color:full-color
 ```
 
 Use `--install-mod` only once per version. Later runs retain the selection.
@@ -35,23 +35,30 @@ Disable it through the menu or `--disable-mod marios-tennis.full-color:full-colo
 to restore the original presentation. **Solid sky and court** controls background
 fills; **Color saturation** ranges from grayscale to full saturation.
 
-## What the spike does
+## What the renderer does
 
 ![Full-color rally captured from the native game](color-rally.png)
 
-`src/tennis_color.cpp` is game-owned code using the framework's read-only
-presentation callback: native 2bpp levels, per-pixel VIP world attribution, eye,
-and displayed frame sequence. It colors the players, ball, net, scenery, court,
-and text; fills sky, scenery silhouettes and court surfaces; and preserves native
-stereo geometry. Service introduction and rally use different player/net layers,
-and the eyes use separate scenery worlds. The renderer handles those cases.
+`src/tennis_color.cpp` uses source texels captured by the native rasterizer, along
+with the game's four player-slot identities. Character materials are keyed by
+original CHR content fingerprint and source atlas position, with unflipped
+pixel masks. Moving world numbers, stereo parallax, and affine scaling do not
+change a material's identity. The previous world guesses and screen-height body
+bands are gone; Mario's hair no longer becomes a beige strip during animation.
 
-This is an experimental visual reconstruction, not finished replacement artwork.
-Player colors use vertical body bands, with approximate Mario and Donkey Kong
-palettes. Other characters, doubles, every camera/animation state, and a complete
-match have not been exhaustively validated. Menus use a generic color palette.
-Court fills infer projected edges from visible native pixels, so unusual views
-may expose artifacts. Native sprite/line detail remains at 384 by 224 per eye.
+The package includes material labels for all seven characters and their selection
+portraits. Caps, hair, skin, garments, gloves, shoes, rackets, Yoshi's spines,
+Toad's spots and Koopa's shell can use different colors. The masks preserve the
+original pixel shapes and native occlusion. Original ROM/CHR pixels are not
+included in the package; the supplied ROM remains the source of the artwork.
+
+![Character selection portraits captured through the development TCP server](color-select.png)
+
+An uncatalogued tile retains native ink and its character's base color rather
+than adopting another layer's palette. This is still a visual reconstruction:
+finite animation captures do not prove every match, doubles setup or pose is
+covered. Court fills infer projected edges, and title/HUD decoration still uses
+a general UI palette. Native detail remains 384 by 224 per eye.
 
 ## Make a data-only palette mod
 
@@ -63,7 +70,7 @@ trusted plugin ID. Package it using:
 python vbrecomp/tools/pack_mod.py path/to/my-palette my-palette.vbmod
 ```
 
-The ZIP contains metadata and palette data only. It cannot load a DLL or script.
+The ZIP contains metadata, palette values and material annotations. It cannot load a DLL or script.
 Two enabled packages claiming `video.renderer` produce a conflict before launch;
 disable one to use the other. A genuinely new rendering implementation is linked
 into the game and registered under its own trusted ID. Other framework consumers
@@ -74,13 +81,49 @@ Noncommercial license. The game-owned color code and palette remain under this
 repository's MIT license. See `vbrecomp/docs/MODS.md` for package authoring and the
 framework's retained third-party notices.
 
+Additional palette keys use `material.NAME`, where NAME is `background`, `ink`,
+`cap`, `skin`, `trousers`, `brown`, `white`, `yellow`, `green`, `pink`, `hair`,
+`mouth`, `cyan`, `dark_hair`, `navy`, `pupil`, `racket`, `gold`, `shell`, or `shirt`.
+These override that material's RGB independently of the original palette aliases.
+
+## Capture and author materials
+
+The development game already provides a loopback TCP screenshot server. Launch
+with `--paused --port 4495` and send newline-delimited JSON. `screenshot` takes
+`path`, `eye` and `presented: 1`; omit `presented` for original pixels.
+`source_dump` captures the displayed source coordinates, raw texels and hashes.
+See `vbrecomp/docs/MODS.md` for the wire format and deterministic stepping.
+
+The authoring tools require Python 3.11+ and Pillow. A reproducible capture route
+selects each character using native controller input, then moves, serves and
+swings while collecting displayed artwork. Use a private output directory:
+
+```powershell
+python tools/color_capture.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb private-capture --samples 360
+python tools/color_materials.py private-capture private-capture/portraits.json mods/full-color/materials.bin
+```
+
+`--opponent 0 --characters 1` captures Mario as the distant opponent. Merge such
+a second corpus with `color_materials.py --extra-capture other-capture`. Inspect
+the emitted color contact sheets, update the authoring rules/material annotations,
+rebuild the package, and validate it in the actual runtime. Captures contain
+decoded owner-ROM artwork and must not be committed or bundled.
+
+`materials.bin` uses magic `VBMAT002`, a little-endian uint32 tile count, seven
+32x32 portrait material masks, then 72-byte tile records. Each record is
+`<BBBBI` (character 0..6, atlas size 128, tile x/y, CHR FNV-1a), followed by 64
+unflipped material bytes. Bits 0..4 select the material; bits 5..6 select one of
+four shades; bit 7 is reserved. The loader rejects invalid sizes, IDs, shades,
+duplicate keys, truncation and trailing data before replacing an active catalog.
+
 ## Validation
 
 Run the owner-ROM integration checks against a debug-tools build:
 
 ```powershell
-python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.1.0.vbmod build/color-check
-python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.1.0.vbmod build/ui-check
+python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod build/color-check
+python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod build/ui-check
+python tools/validate_materials.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.0.vbmod mods/full-color/materials.bin build/material-check
 ```
 
 The first follows a deterministic boot/service/rally route, compares both raw
@@ -91,6 +134,20 @@ The second drives only its own Windows process: rebinds A to C in the launcher,
 verifies saved settings and actual input-register behavior, checks menu pause,
 and toggles color off/on without advancing or changing the displayed game state.
 Both leave their evidence in the requested output directory.
+
+The material check replays each character's animation route, measures catalog
+coverage in both eyes, verifies that screenshots do not advance the paused guest,
+and saves actual PNG contact sheets and animated GIFs for visual inspection. It
+fails below 99% coverage in any sampled frame. Use fresh output directories when
+changing a package without changing its version; validators reject stale installs.
+CTest includes ROM-free material-file rejection tests, native source/occlusion
+tests, and the package lifecycle/security integration test.
+
+The 0.2.0 pass was checked with 360 animation samples per character in both eyes:
+all sampled character pixels had material coverage. A separate 360-sample match
+checks Mario as the distant opponent. The catalog contains 12,713 tile material
+records from 646 captured poses. These are finite route checks, not a claim of
+exhaustive game coverage; use the same tools when extending the artwork catalog.
 
 Also validated: 77 Python recompiler tests (5 oracle-dependent skips), unchanged
 regenerated C, package lifecycle/security tests, shared-UI profile/assets/runtime

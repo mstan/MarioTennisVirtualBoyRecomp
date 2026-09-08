@@ -14,6 +14,7 @@ import socket
 import subprocess
 import sys
 import time
+from validation_package import install_args
 
 exe, rom, package, output = [Path(p).resolve() for p in sys.argv[1:]]
 output.mkdir(parents=True, exist_ok=True)
@@ -27,8 +28,7 @@ env["LNG_SCRIPT"] = ";".join([
     "click:968,819", "wait:30"])
 args = [str(exe), "--launcher", "--paused", "--port", "4492", "--rom", str(rom),
         "--config", str(config), "--mods-dir", str(output / "mods")]
-if not (output / "mods/packages/marios-tennis.full-color/0.1.0").exists():
-    args += ["--install-mod", str(package)]
+args += install_args(output/'mods',package)
 args += ["--enable-mod", "marios-tennis.full-color:full-color"]
 process = subprocess.Popen(args, cwd=output, env=env, creationflags=subprocess.CREATE_NO_WINDOW)
 user32 = ctypes.WinDLL("user32", use_last_error=True)

@@ -63,14 +63,27 @@ target_compile_definitions(vb-runtime PRIVATE
     VB_GAME_CRC32=0x7CE7460Du)
 set_target_properties(vb-runtime PROPERTIES OUTPUT_NAME MarioTennisVirtualBoyRecomp)
 target_sources(vb-runtime PRIVATE src/tennis_color.cpp)
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(tennis-materials-test tests/materials_test.cpp)
+    target_include_directories(tennis-materials-test PRIVATE src)
+    if(MSVC)
+        target_compile_options(tennis-materials-test PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(tennis-materials-test PRIVATE -UNDEBUG)
+    endif()
+    add_test(NAME tennis-materials COMMAND tennis-materials-test
+        "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color/materials.bin"
+        "${CMAKE_CURRENT_BINARY_DIR}/invalid-materials-test.bin")
+endif()
 
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
-    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.1.0.vbmod")
+    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.2.0.vbmod")
     add_custom_command(OUTPUT "${_color_package}"
         COMMAND "${Python3_EXECUTABLE}" "${VBRECOMP_ROOT}/tools/pack_mod.py"
                 "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color" "${_color_package}"
-        DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt
+        DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt mods/full-color/materials.bin
                 "${VBRECOMP_ROOT}/tools/pack_mod.py"
         VERBATIM)
     add_custom_target(mario-tennis-mods DEPENDS "${_color_package}")

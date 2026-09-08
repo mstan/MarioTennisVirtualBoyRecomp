@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import zipfile
+from validation_package import install_args
 
 exe, rom, package, output = map(lambda p: Path(p).resolve(), sys.argv[1:])
 output.mkdir(parents=True, exist_ok=True)
@@ -51,8 +52,7 @@ def run(name, enabled, archive=package):
     folder.mkdir(exist_ok=True)
     args = [str(exe), "--rom", str(rom), "--headless", "--paused", "--port", str(port),
             "--mods-dir", str(folder / "mods"), "--config", str(folder / "settings.cfg")]
-    if not (folder / "mods/packages/marios-tennis.full-color/0.1.0").exists():
-        args += ["--install-mod", str(archive)]
+    args += install_args(folder/'mods',archive)
     args += ["--enable-mod" if enabled else "--disable-mod", "marios-tennis.full-color:full-color"]
     env = os.environ.copy()
     # Legacy experimental overrides are not part of the package renderer.
