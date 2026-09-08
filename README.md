@@ -3,7 +3,7 @@
 Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native Windows binary.
 Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 
-This branch adds a shared launcher, persistent controls/settings, a ROM-preserving
+Includes a shared launcher, persistent controls/settings, a ROM-preserving
 mod catalog, and an optional full-color renderer using the original artwork. See [Mods and color](docs/MODS-AND-COLOR.md)
 for installation, palette authoring, validation, and the experiment's limitations.
 
@@ -17,11 +17,12 @@ for installation, palette authoring, validation, and the experiment's limitation
 
 ### Quick start
 
-Existing release downloads predate this branch's mod/UI/color work. Build from
-source below to try this experiment; a new release has not been published.
+The **v0.2.2 Windows release** includes the Virtual Boy launcher, box art, and
+the optional full-color mod. Color is disabled by default; the original ROM is
+never modified. Linux/macOS build scripts are available for source builds.
 
 1. Download `MarioTennisVirtualBoyRecomp-windows-x64.zip` from [Releases](../../releases).
-2. Extract anywhere (you'll get `MarioTennisVirtualBoyRecomp.exe`, `SDL2.dll`, `README.txt`).
+2. Extract the entire ZIP, including `assets`, `licenses`, and `SDL2.dll`.
 3. Provide your own Mario's Tennis cart dump (the binary will not run against any other file — it CRC32-verifies the ROM at launch). Required:
    - **CRC32:** `0x7CE7460D`
    - **SHA-256:** `5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101`
@@ -30,6 +31,16 @@ source below to try this experiment; a new release has not been published.
    ```
    MarioTennisVirtualBoyRecomp.exe --rom path\to\marios_tennis.vb
    ```
+
+To enable color, import the included `marios-tennis-full-color-0.2.2.vbmod` in
+**Mods**, then enable **Full-color renderer**. You can also install and enable
+it explicitly from the command line:
+
+```powershell
+.\MarioTennisVirtualBoyRecomp.exe --install-mod .\marios-tennis-full-color-0.2.2.vbmod --enable-mod marios-tennis.full-color:full-color
+```
+
+The release executable omits the TCP debugger and private pose recorder.
 
 ### Controls
 
