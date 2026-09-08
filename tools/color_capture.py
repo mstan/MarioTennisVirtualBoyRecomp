@@ -83,7 +83,7 @@ def capture_portraits(client, output):
     (output / "portraits.json").write_text(json.dumps(portraits), encoding="utf-8")
 
 
-def collect(client, output, seen):
+def collect(client, output, seen, frame_cache=None):
     ids = struct.unpack("<4H", client.read(0x0500203A, 8))
     capture = output.parent / "current.src"
     visible = [{} for _ in range(4)]
@@ -94,6 +94,13 @@ def collect(client, output, seen):
             if w and m == 0 and 384 <= y < 512 and x < 512:
                 visible[x // 128][(x % 128, y - 384)] = (h, u, v, r)
     chr_data = client.read(0x78000, 32768)
+    if frame_cache is not None:
+        signature = hashlib.sha256(
+            repr((ids, [sorted(slot.items()) for slot in visible])).encode() + chr_data
+        ).digest()
+        if signature in frame_cache:
+            return
+        frame_cache.add(signature)
     byhash = {
         fnv(chr_data[t : t + 16]): chr_data[t : t + 16] for t in range(0, 32768, 16)
     }
@@ -178,6 +185,11 @@ def main():
     parser.add_argument("--characters", default="0,1,2,3,4,5,6")
     parser.add_argument("--samples", type=int, default=220)
     parser.add_argument("--frame-step", type=int, default=4)
+    parser.add_argument(
+        "--input-step",
+        type=int,
+        help="Input cadence in frames, independent of capture cadence",
+    )
     parser.add_argument("--port", type=int, default=4495)
     parser.add_argument("--opponent", type=int, choices=range(7))
     args = parser.parse_args()
@@ -185,6 +197,7 @@ def main():
     poses = output / "poses"
     poses.mkdir(parents=True, exist_ok=True)
     seen = {p.stem for p in poses.glob("*.json")}
+    frame_cache = set()
     client = Client(args.port)
     for character in map(int, args.characters.split(",")):
         process = subprocess.Popen(
@@ -262,11 +275,18 @@ def main():
             # strokes exercise animation while the CPU opponent responds normally.
             directions = [0, 256, 512, 2048, 1024, 256 | 2048, 512 | 1024, 0]
             for sample in range(args.samples):
-                direction = directions[(sample // 12) % len(directions)]
-                stroke = (4 if (sample // 10) % 2 == 0 else 8) if sample % 10 < 4 else 0
+                input_sample = (
+                    sample * args.frame_step // (args.input_step or args.frame_step)
+                )
+                direction = directions[(input_sample // 12) % len(directions)]
+                stroke = (
+                    (4 if (input_sample // 10) % 2 == 0 else 8)
+                    if input_sample % 10 < 4
+                    else 0
+                )
                 client.call("set_input", pad=direction | stroke)
                 client.advance(args.frame_step)
-                collect(client, poses, seen)
+                collect(client, poses, seen, frame_cache)
                 if sample % 40 == 0:
                     print("sample", sample, "unique poses", len(seen), flush=True)
                     client.call(

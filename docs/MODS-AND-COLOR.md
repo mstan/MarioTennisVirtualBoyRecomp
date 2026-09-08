@@ -22,12 +22,12 @@ cmake --build build --target vb-runtime mario-tennis-mods
 ```
 
 In **Mods**, install
-`build/mod-packages/marios-tennis-full-color-0.2.1.vbmod`, enable **Full-color
+`build/mod-packages/marios-tennis-full-color-0.2.2.vbmod`, enable **Full-color
 renderer**, and Play. It defaults off when first installed. To do the
 same from the command line:
 
 ```powershell
-.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.2.1.vbmod --enable-mod marios-tennis.full-color:full-color
+.\build\vbrecomp\runtime\MarioTennisVirtualBoyRecomp.exe --rom roms\marios_tennis.vb --install-mod build\mod-packages\marios-tennis-full-color-0.2.2.vbmod --enable-mod marios-tennis.full-color:full-color
 ```
 
 Use `--install-mod` only once per version. Later runs retain the selection.
@@ -121,9 +121,9 @@ duplicate keys, truncation and trailing data before replacing an active catalog.
 Run the owner-ROM integration checks against a debug-tools build:
 
 ```powershell
-python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod build/color-check
-python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod build/ui-check
-python tools/validate_materials.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.1.vbmod mods/full-color/materials.bin build/material-check
+python tools/validate_color.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.2.vbmod build/color-check
+python tools/validate_ui_windows.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.2.vbmod build/ui-check
+python tools/validate_materials.py build/vbrecomp/runtime/MarioTennisVirtualBoyRecomp.exe roms/marios_tennis.vb build/mod-packages/marios-tennis-full-color-0.2.2.vbmod mods/full-color/materials.bin build/material-check
 ```
 
 The first follows a deterministic boot/service/rally route, compares both raw
@@ -187,3 +187,40 @@ eyes, including the later overhead pose. Character and referee material coverage
 are both 100% in this route. See `color-round-validation.json` for counts and
 hashes, and `color-round.png` for an actual TCP screenshot. ROM, native images,
 WRAM, CPU registers and subsequent play remain equal in the off/on comparison.
+
+
+### 0.2.2: transitions, transparent HUD and Virtual Boy launcher
+
+Removed the artificial dark rectangle behind Lakitu and the scoreboard; native
+artwork and mesh now sit over the sky/scenery. Added 69 Mario and 181 Luigi
+material tiles, including overhead recovery and distant-player poses. The
+13,184-record player catalog preserves all previously reviewed nonzero texels
+and portrait masks. The full-color feature remains opt-in and disabled by default.
+
+The launcher now uses recomp-ui's dedicated black/crimson Virtual Boy palette,
+with warm text and focus accents, plus the North American display-box front scan.
+The source and copyright notice for the box art are in `assets/NOTICE.md` and are
+staged with the launcher. The native framebuffer does not use the launcher palette.
+
+Debug builds can record every newly encountered uncatalogued player pose by
+setting `VB_TENNIS_CAPTURE_MISSING` to an absolute private output directory.
+The recorder runs on presented frames, independently of TCP sampling intervals.
+It uses draw-time source coordinates and verifies live CHR before recovering
+hidden pixels. It writes at most 1,024 deduplicated pose files, disables itself
+on output failure, and emits `capture-summary.json` on normal exit. This code
+is absent from builds with `VBRECOMP_DEBUG_TOOLS=OFF`. Captures contain original
+owner-ROM artwork: do not commit or package them. They are not auto-applied.
+
+`tools/capture_live_windows.py EXE ROM PACKAGE OUTPUT --check` drives only its
+own hidden SDL window with native input. Stereo mode checks both eyes on every
+presented frame; --check rejects any unknown frame. Use `--character 1
+--opponent 0` for Luigi against Mario and `--step 17` to vary input timing.
+Import its `poses` directory with `color_materials.py --extra-capture OUTPUT
+--base-catalog previous-materials.bin`, inspect the authored colors, then rebuild
+and replay. The TCP collector also supports separate `--frame-step` and
+`--input-step` values, so increasing capture density need not change the inputs.
+
+Final verification covered 7,018 eye-frames per route (Mario/Luigi and
+Luigi/Mario): 14,036 total, with zero unknown character frames. See
+`color-recovery-validation.json` and `color-recovery.png`. These are finite
+input routes; the private recorder supports further discoveries during play.

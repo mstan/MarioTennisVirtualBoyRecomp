@@ -62,6 +62,18 @@ target_compile_definitions(vb-runtime PRIVATE
     VB_GAME_SHA256="5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101"
     VB_GAME_CRC32=0x7CE7460Du)
 set_target_properties(vb-runtime PROPERTIES OUTPUT_NAME MarioTennisVirtualBoyRecomp)
+if(MARIO_TENNIS_UI)
+    add_custom_target(mario-tennis-assets
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:vb-runtime>/assets/img"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/boxart.tga"
+            "$<TARGET_FILE_DIR:vb-runtime>/assets/img/boxart.tga"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/NOTICE.md"
+            "$<TARGET_FILE_DIR:vb-runtime>/assets/BOXART-NOTICE.md"
+        VERBATIM)
+    add_dependencies(vb-runtime mario-tennis-assets)
+endif()
 target_sources(vb-runtime PRIVATE src/tennis_color.cpp)
 include(CTest)
 if(BUILD_TESTING)
@@ -80,7 +92,7 @@ endif()
 
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
-    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.2.1.vbmod")
+    set(_color_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-full-color-0.2.2.vbmod")
     add_custom_command(OUTPUT "${_color_package}"
         COMMAND "${Python3_EXECUTABLE}" "${VBRECOMP_ROOT}/tools/pack_mod.py"
                 "${CMAKE_CURRENT_SOURCE_DIR}/mods/full-color" "${_color_package}"

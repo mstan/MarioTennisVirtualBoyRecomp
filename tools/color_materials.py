@@ -787,7 +787,11 @@ def main():
         for path in paths:
             d = json.loads(path.read_text())
             n = d["size"]
-            p = base64.b64decode(d["pixels"])
+            p = (
+                base64.b64decode(d["pixels"])
+                if isinstance(d["pixels"], str)
+                else bytes(d["pixels"])
+            )
             m = sprite(c, p, n)
             for tx, ty, h, hflip, vflip in d["tiles"]:
                 mask = bytearray(64)

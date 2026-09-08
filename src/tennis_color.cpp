@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include "tennis_capture.h"
 
 namespace {
 struct Palette {
@@ -67,7 +68,6 @@ unsigned actor_color(const VbSourceTexel& s,const uint8_t* ids) {
 void render(const VbRenderFrame* frame, uint32_t* out, void*) {
     if(!frame->sources)return;
     const auto* ids=vb_wram_data()+0x203a;
-    std::array<Bounds,33> boxes{};
     Bounds court;
     std::array<int,224> left, right;
     std::array<int,384> skyline;
@@ -75,9 +75,6 @@ void render(const VbRenderFrame* frame, uint32_t* out, void*) {
     for (int y=0;y<224;++y) for (int x=0;x<384;++x) {
         const int i=y*384+x, w=frame->worlds[i];
         if (w<1 || w>32) continue;
-        auto& b=boxes[w]; ++b.count;
-        b.x0=std::min(b.x0,x); b.x1=std::max(b.x1,x);
-        b.y0=std::min(b.y0,y); b.y1=std::max(b.y1,y);
         const auto& s=frame->sources[i];
         if (court_texel(s)) {
             left[y]=std::min(left[y],x); right[y]=std::max(right[y],x);
@@ -86,6 +83,7 @@ void render(const VbRenderFrame* frame, uint32_t* out, void*) {
         if (s.map==1 && s.y>=352 && s.y<432 && y<96) skyline[x]=std::min(skyline[x],y);
     }
     const bool match=court.count>300 && court.y0>=96;
+    if(match)tennis::capture_missing(frame,materials,ids);
     if (match) {
         // Interpolate missing scanlines between actual projected court edges.
         for(int y=court.y0;y<=court.y1;++y) if(right[y]<left[y]) {
@@ -113,9 +111,6 @@ void render(const VbRenderFrame* frame, uint32_t* out, void*) {
             if(y>=court.y0 && y<=court.y1 && x>=left[y] && x<=right[y]) {
                 color=palette.court; brightness=90;
             }
-            const auto& score=boxes[28];
-            if(score.count>100 && score.y1<100 && x>=score.x0 && x<=score.x1
-                && y>=score.y0 && y<=score.y1) { color=0x16364c; brightness=100; }
             if(w) {
                 const auto& s=frame->sources[i];
                 if(actor_texel(s)) {out[i]=actor_color(s,ids);continue;}

@@ -27,6 +27,17 @@ int main(int argc,char** argv) {
         assert(it!=catalog.tiles.end());
         assert((it->second[point.v*8+point.u]&31)==point.material);
     }
+    // Recovery poses captured continuously, between the former TCP samples.
+    struct ActorLandmark {unsigned c,x,y,hash,u,v,material;};
+    const ActorLandmark recovery[]={
+        {0,5,4,0x300189b0u,7,6,2}, {0,5,5,0xcd90f4bau,5,4,3},
+        {0,5,6,0x26b8ca94u,2,6,4}, {1,5,6,0x0ff77f69u,7,3,8},
+        {1,3,12,0xaecfd089u,5,6,6}, {1,6,12,0x0ccc0dc1u,7,5,4}};
+    for(const auto& point:recovery) {
+        auto it=catalog.tiles.find(tennis::Materials::key(point.c,point.x,point.y,point.hash));
+        assert(it!=catalog.tiles.end());
+        assert((it->second[point.v*8+point.u]&31)==point.material);
+    }
     std::ifstream in(argv[1],std::ios::binary);
     const std::vector<char> original((std::istreambuf_iterator<char>(in)),{});
     auto reject=[&](std::vector<char> bytes) {

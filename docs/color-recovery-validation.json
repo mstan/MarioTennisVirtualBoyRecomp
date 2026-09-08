@@ -1,0 +1,45 @@
+{
+  "package": "marios-tennis.full-color@0.2.2",
+  "theme_commit": "bca0bcc",
+  "player_tile_records": 13184,
+  "added_mario_tiles": 69,
+  "added_luigi_tiles": 181,
+  "reviewed_texels_and_portraits_preserved": true,
+  "opaque_hud_fill_removed": true,
+  "rom_sha256": "5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101",
+  "materials_sha256": "72bed47d8ad93d135884d3c493406fd00edeefec946dde51382b7c1338add8b8",
+  "package_sha256": "1e21a196693626a0c58f89053dc63f852608b445d671433d4a86fe135c3175e6",
+  "routes": [
+    {
+      "eye_frames": 7018,
+      "unknown_eye_frames": 0,
+      "saved_poses": 0,
+      "failed": false,
+      "limit_reached": false,
+      "character": 0,
+      "opponent": 1,
+      "inputs": 400,
+      "frames_per_input": 17
+    },
+    {
+      "eye_frames": 7018,
+      "unknown_eye_frames": 0,
+      "saved_poses": 0,
+      "failed": false,
+      "limit_reached": false,
+      "character": 1,
+      "opponent": 0,
+      "inputs": 400,
+      "frames_per_input": 17
+    }
+  ],
+  "validation": [
+    "Both eyes checked on every presented frame, not only screenshots",
+    "CTest 3/3 including recovery landmarks",
+    "Native output, WRAM, registers, subsequent play and original ROM A/B preserved",
+    "Debug-tools-OFF build passes; recorder excluded",
+    "Launcher/theme/cover and gameplay HUD inspected from actual screenshots",
+    "Ruff and Linux/macOS packaging syntax pass"
+  ],
+  "limits": "Two deterministic 400-input routes with a 17-frame cadence; other match modes/poses are not claimed exhaustive. Optional private dev recorder captures unseen poses for review."
+}
