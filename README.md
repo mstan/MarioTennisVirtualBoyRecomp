@@ -4,9 +4,12 @@
 
 [Watch the full-color gameplay video on YouTube](https://www.youtube.com/watch?v=ull3_HgJeYM).
 
-[![Experimental color mod gameplay: Mario faces Donkey Kong on a blue tennis court with green scenery](color-video-gameplay.png)](https://www.youtube.com/watch?v=ull3_HgJeYM)
-
-![Experimental color mod character selection and match settings, with Mario selected against Donkey Kong](color-video-character-select.png)
+<table>
+  <tr>
+    <td width="50%"><a href="https://www.youtube.com/watch?v=ull3_HgJeYM"><img src="color-video-gameplay.png" alt="Experimental color mod gameplay: Mario faces Donkey Kong on a blue tennis court with green scenery" width="100%"></a></td>
+    <td width="50%"><img src="color-video-character-select.png" alt="Experimental color mod character selection and match settings, with Mario selected against Donkey Kong" width="100%"></td>
+  </tr>
+</table>
 
 These screenshots show the optional experimental color mod. See [Mods and color](docs/MODS-AND-COLOR.md) for setup and limitations.
 
@@ -21,7 +24,9 @@ for installation, palette authoring, validation, and the experiment's limitation
 
 > **Status: Playable.** A full match against the CPU completes without crashes. Audio, video, and input are all wired. Pixel-perfect on the title/warning screen versus the Beetle VB reference (0 / 86 016 pixels differ at zero tolerance).
 
-<p align="center"><img src="baseline-title-screen-3x.png" alt="Mario's Tennis title screen" width="600"></p>
+<p align="center"><img src="native-red-gameplay.png" alt="Native red gameplay: Mario swings at the ball against Luigi, with the court and scoreboard visible" width="768"></p>
+
+Native red gameplay captured from the recomp with color mods disabled.
 
 ---
 
