@@ -1,5 +1,17 @@
 # MarioTennisVirtualBoyRecomp
 
+## Experimental color mods
+
+[Watch the full-color gameplay video on YouTube](https://www.youtube.com/watch?v=ull3_HgJeYM).
+
+[![Experimental color mod gameplay: Mario faces Donkey Kong on a blue tennis court with green scenery](color-video-gameplay.png)](https://www.youtube.com/watch?v=ull3_HgJeYM)
+
+![Experimental color mod character selection and match settings, with Mario selected against Donkey Kong](color-video-character-select.png)
+
+These screenshots show the optional experimental color mod. See [Mods and color](docs/MODS-AND-COLOR.md) for setup and limitations.
+
+---
+
 Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native Windows binary.
 Built with the [vbrecomp](https://github.com/mstan/vbrecomp) framework.
 
