@@ -1,0 +1,8 @@
+{
+  "module": "marios_tennis",
+  "ui_option": "MARIO_TENNIS_UI",
+  "sha256": "5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101",
+  "extra_targets": [
+    "mario-tennis-mods"
+  ]
+}

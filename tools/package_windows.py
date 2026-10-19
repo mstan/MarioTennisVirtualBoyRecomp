@@ -3,8 +3,10 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import tempfile
 import zipfile
@@ -22,9 +24,15 @@ def main():
     build = args.build.resolve()
     cache = (build / "CMakeCache.txt").read_text(encoding="utf-8")
     assert "VBRECOMP_DEBUG_TOOLS:BOOL=OFF" in cache
+    assert "VBRECOMP_CPUHOOK:BOOL=OFF" in cache
     assert "MARIO_TENNIS_UI:BOOL=ON" in cache
     assert "CMAKE_BUILD_TYPE:STRING=Release" in cache
-    version = "0.2.2"
+    for key, expected in (("CMAKE_HOME_DIRECTORY", repo),
+                          ("VBRECOMP_ROOT", repo / "vbrecomp"),
+                          ("RECOMP_UI_ROOT", repo / "recomp-ui")):
+        match = re.search(rf"^{key}:[^=]+=(.+)$", cache, re.MULTILINE)
+        assert match and Path(match[1]).resolve() == expected.resolve(), key
+    version = (repo / "VERSION").read_text().strip()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix="windows-stage-", dir=output))
@@ -32,8 +40,28 @@ def main():
     exe = "MarioTennisVirtualBoyRecomp.exe"
     shutil.copy2(runtime / exe, stage / exe)
     shutil.copy2(args.sdl, stage / "SDL2.dll")
+    # Include the complete non-system DLL closure, including alternate native
+    # toolchains that link the C++ runtime dynamically.
+    queue = [runtime / exe, args.sdl.resolve()]
+    copied = {"sdl2.dll"}
+    toolchain = args.sdl.resolve().parent
+    while queue:
+        binary = queue.pop()
+        imports = subprocess.check_output([str(toolchain / "objdump.exe"), "-p", str(binary)], text=True)
+        for name in re.findall(r"DLL Name:\s*(\S+)", imports):
+            if name.lower() in copied:
+                continue
+            candidate = next((folder / name for folder in (runtime, toolchain) if (folder / name).is_file()), None)
+            if candidate:
+                copied.add(name.lower())
+                shutil.copy2(candidate, stage / name)
+                queue.append(candidate)
+            elif not (Path(os.environ["SystemRoot"]) / "System32" / name).is_file() and not name.lower().startswith(("api-ms-", "ext-ms-")):
+                raise RuntimeError("Unresolved dependency: " + name)
     shutil.copytree(runtime / "assets", stage / "assets")
-    package = f"marios-tennis-full-color-{version}.vbmod"
+    shutil.copy2(repo / "README.md", stage / "README.md")
+    shutil.copytree(repo / "docs", stage / "docs")
+    package = "marios-tennis-full-color-0.2.2.vbmod"
     shutil.copy2(build / "mod-packages" / package, stage / package)
     shutil.copy2(stage / package, output / package)
     licenses = stage / "licenses"
@@ -73,10 +101,13 @@ def main():
     )
 
     def commit(path):
+        assert not subprocess.check_output([args.git, "-C", str(path), "status", "--porcelain"], text=True).strip(), path
         return subprocess.check_output(
             [args.git, "-C", str(path), "rev-parse", "HEAD"], text=True
         ).strip()
 
+    for name in ("vbrecomp", "recomp-ui"):
+        assert subprocess.check_output([args.git, "-C", str(repo), "rev-parse", "HEAD:" + name], text=True).strip() == commit(repo / name)
     (stage / "build-info.json").write_text(
         json.dumps(
             dict(
@@ -86,6 +117,8 @@ def main():
                 recomp_ui_commit=commit(repo / "recomp-ui"),
                 debug_tools=False,
                 default_color_enabled=False,
+                executable_sha256=hashlib.sha256((stage / exe).read_bytes()).hexdigest(),
+                dlls={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in stage.glob("*.dll")},
             ),
             indent=2,
         )

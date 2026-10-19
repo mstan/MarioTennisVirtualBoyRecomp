@@ -34,7 +34,7 @@ Native red gameplay captured from the recomp with color mods disabled.
 
 ### Quick start
 
-The **v0.2.2 Windows release** includes the Virtual Boy launcher, box art, and
+The **v0.2.3 Windows release** includes the Virtual Boy launcher, box art, and
 the optional full-color mod. Color is disabled by default; the original ROM is
 never modified. Linux/macOS build scripts are available for source builds.
 
@@ -89,7 +89,8 @@ Xbox controller (XInput, player 1):
 |-----------------------|---------------------------------------------------------|
 | `--rom PATH`          | Cart file (required for play)                           |
 | `--stereo`            | Show both eyes stacked vertically instead of single-eye |
-| `--headless`          | No SDL window, TCP debug server only                    |
+| `--headless`          | Run without an SDL window                              |
+| `--frames N`          | Exit cleanly after N guest frames (1–1,000,000)         |
 | `--port N`            | TCP debug port (default 4390)                           |
 | `--help`              | Print full usage                                        |
 
@@ -129,10 +130,28 @@ MarioTennisVirtualBoyRecomp/
 └── vbrecomp/                  — framework (separate repo: mstan/vbrecomp)
 ```
 
+### Coverage and reproducible builds
+
+The October 2026 pass reached actual courts with all seven characters in both
+singles and doubles. A fresh independent Beetle comparison also covers singles
+and doubles tournament brackets, rallies, pause and resume. See
+[coverage scope and commands](docs/COVERAGE-20261018.md).
+
+The game wrapper delegates common generation, toolchain selection, compilation
+and checks to the pinned framework. It works from any caller directory:
+
+```powershell
+.\tools\build.ps1 -Rom 'C:\Games\marios_tennis.vb'
+.\tools\build.ps1 -Rom 'C:\Games\marios_tennis.vb' -Build build-release -Production
+```
+
+Production keeps normal audio and omits TCP debugging and CPU recording.
+The full-color package retains its independent version, 0.2.2.
+
 ### Build from source
 
 Prerequisites: Windows 10+, MSYS2 MinGW64 GCC, Ninja, CMake and SDL2, plus
-Python 3.10+ (`tomli` is needed only on Python 3.10). Initialize both pinned
+Python 3.11+. Initialize both pinned
 submodules with `git submodule update --init --recursive`.
 
 ```powershell
