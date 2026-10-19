@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(MarioTennisVirtualBoyRecomp C CXX)
+project(MarioTennisVirtualBoyRecomp VERSION 0.2.3 LANGUAGES C CXX)
 
 # Top-level project file for the Mario's Tennis (Virtual Boy)
 # static-recompiler build. The actual recompiler + runtime live in the

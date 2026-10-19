@@ -3,5 +3,5 @@
 # Local development uses CMake -DVBRECOMP_ROOT and -DRECOMP_UI_ROOT with
 # separate worktrees. Do not delete submodules or create directory junctions.
 # Publish the dependency commit before rolling its gitlink, then update sha.
-branch = codex/mods-ui-color-20260908
-sha = 137ae3b9dce46febc65a21af558b0d95b16e5212
+branch = master
+sha = 8e8d3c68b0dcfd5fde5b8c95e7fb20c161be247c
