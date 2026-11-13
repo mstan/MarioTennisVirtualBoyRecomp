@@ -64,6 +64,10 @@ def main():
     package = "marios-tennis-full-color-0.2.2.vbmod"
     shutil.copy2(build / "mod-packages" / package, stage / package)
     shutil.copy2(stage / package, output / package)
+    stereo_package = "marios-tennis-anaglyph-0.1.0.vbmod"
+    shutil.copy2(build / "mod-packages" / stereo_package, stage / stereo_package)
+    shutil.copy2(stage / stereo_package, output / stereo_package)
+    shutil.copytree(repo / "mods/anaglyph", stage / "mods/packages/marios-tennis.anaglyph/0.1.0")
     licenses = stage / "licenses"
     licenses.mkdir()
     sources = {
@@ -92,6 +96,8 @@ def main():
         "Required ROM: 524288 bytes, CRC32 7CE7460D. No ROM is included or modified.\n\n"
         f"Optional color: use Mods to import {package}, then enable Full-color renderer.\n"
         "Color is experimental and OFF by default. Disable it to return to native red/black.\n"
+        "Optional stereo: enable Red/Cyan Stereoscopic 3D in Mods; red lens on the left eye.\n"
+        "Stereo uses both original eye images and is OFF by default.\n"
         "Keyboard: arrows move, X/Z are A/B, Enter is Start, Esc opens settings.\n"
         "Controls can be rebound in the launcher. Settings/mod state use a writable user profile.\n"
         "This production build has no TCP debugger or private pose recorder.\n\n"
@@ -131,7 +137,7 @@ def main():
             if path.is_file():
                 assert path.suffix.lower() not in (".vb", ".vboy", ".cfg", ".src")
                 z.write(path, path.relative_to(stage).as_posix())
-    artifacts = [archive, output / package]
+    artifacts = [archive, output / package, output / stereo_package]
     (output / "SHA256SUMS.txt").write_text(
         "".join(
             f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n"

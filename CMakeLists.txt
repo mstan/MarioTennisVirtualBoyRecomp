@@ -99,5 +99,11 @@ if(Python3_Interpreter_FOUND)
         DEPENDS mods/full-color/manifest.toml mods/full-color/palette.txt mods/full-color/materials.bin mods/full-color/hud-materials.bin
                 "${VBRECOMP_ROOT}/tools/pack_mod.py"
         VERBATIM)
-    add_custom_target(mario-tennis-mods DEPENDS "${_color_package}")
+    set(_stereo_package "${CMAKE_CURRENT_BINARY_DIR}/mod-packages/marios-tennis-anaglyph-0.1.0.vbmod")
+    add_custom_command(OUTPUT "${_stereo_package}"
+        COMMAND "${Python3_EXECUTABLE}" "${VBRECOMP_ROOT}/tools/pack_mod.py"
+                "${CMAKE_CURRENT_SOURCE_DIR}/mods/anaglyph" "${_stereo_package}"
+        DEPENDS mods/anaglyph/manifest.toml "${VBRECOMP_ROOT}/tools/pack_mod.py"
+        VERBATIM)
+    add_custom_target(mario-tennis-mods DEPENDS "${_color_package}" "${_stereo_package}")
 endif()

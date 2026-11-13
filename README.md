@@ -13,6 +13,13 @@
 
 These screenshots show the optional experimental color mod. See [Mods and color](docs/MODS-AND-COLOR.md) for setup and limitations.
 
+The optional **Red/Cyan Stereoscopic 3D** mod combines the two independently
+rendered Virtual Boy eye images. Use glasses with red over the left eye and
+cyan over the right eye. Enable it in Mods; the selection is saved. It is off
+by default and can be combined with the full-color mod (anaglyph output uses
+monochrome brightness for each eye). Stereo currently uses the native raster
+resolution, with ordinary window scaling, rather than the optional HD GPU path.
+
 ---
 
 Static V810→C recompilation of **Mario's Tennis** (Virtual Boy, 1995) running as a native Windows binary.
