@@ -97,7 +97,8 @@ def main():
         f"Optional color: use Mods to import {package}, then enable Full-color renderer.\n"
         "Color is experimental and OFF by default. Disable it to return to native red/black.\n"
         "Optional stereo: enable Red/Cyan Stereoscopic 3D in Mods; red lens on the left eye.\n"
-        "Stereo uses both original eye images and is OFF by default.\n"
+        "Stereoscopic 3D is experimental and OFF by default, using CPU presentation at native raster resolution.\n"
+        "I have little experience with stereoscopic 3D; please use caution and share feedback.\n"
         "Keyboard: arrows move, X/Z are A/B, Enter is Start, Esc opens settings.\n"
         "Controls can be rebound in the launcher. Settings/mod state use a writable user profile.\n"
         "This production build has no TCP debugger or private pose recorder.\n\n"
@@ -123,6 +124,8 @@ def main():
                 recomp_ui_commit=commit(repo / "recomp-ui"),
                 debug_tools=False,
                 default_color_enabled=False,
+                default_anaglyph_enabled=False,
+                stereo_experimental=True,
                 executable_sha256=hashlib.sha256((stage / exe).read_bytes()).hexdigest(),
                 dlls={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in stage.glob("*.dll")},
             ),

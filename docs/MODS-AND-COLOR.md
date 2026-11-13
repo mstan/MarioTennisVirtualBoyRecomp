@@ -224,3 +224,14 @@ Final verification covered 7,018 eye-frames per route (Mario/Luigi and
 Luigi/Mario): 14,036 total, with zero unknown character frames. See
 `color-recovery-validation.json` and `color-recovery.png`. These are finite
 input routes; the private recorder supports further discoveries during play.
+
+
+### 0.2.4: experimental red/cyan stereoscopic 3D
+
+The optional Red/Cyan Stereoscopic 3D mod combines both independently rendered
+eye images and stays off by default. Use red over the left eye and cyan over
+the right eye. It can run with the full-color mod and uses CPU presentation at
+the native raster resolution, scaled to the window; the HD GPU path is bypassed.
+
+Stereoscopic 3D is experimental. I have little experience with stereoscopic 3D,
+so please use caution and share feedback about how it works for you.

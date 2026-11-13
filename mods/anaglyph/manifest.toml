@@ -3,7 +3,7 @@ id = "marios-tennis.anaglyph"
 version = "0.1.0"
 name = "Red/Cyan Stereoscopic 3D"
 author = "Mario Tennis Recomp contributors"
-description = "View both Virtual Boy eye images through red/cyan glasses."
+description = "Experimental stereoscopic 3D using both Virtual Boy eye images and red/cyan glasses."
 license = "MIT"
 
 [[target]]
@@ -13,7 +13,7 @@ rom_sha256 = "5dc5e6b5d5f538f56b3b9727db1c7931d9dfe1bbd0743f698897e0fd90e70101"
 [[feature]]
 id = "anaglyph"
 name = "Red/Cyan Stereoscopic 3D"
-description = "Use glasses with red over your left eye and cyan over your right eye. Combines the game's two eye images at native resolution; also works with the color mod."
+description = "Experimental: use caution and share feedback. Use glasses with red over your left eye and cyan over your right eye. Combines both eye images at native resolution; also works with the color mod."
 group = "Video"
 channel = "experimental"
 default_enabled = false

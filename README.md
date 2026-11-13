@@ -18,7 +18,11 @@ rendered Virtual Boy eye images. Use glasses with red over the left eye and
 cyan over the right eye. Enable it in Mods; the selection is saved. It is off
 by default and can be combined with the full-color mod (anaglyph output uses
 monochrome brightness for each eye). Stereo currently uses the native raster
-resolution, with ordinary window scaling, rather than the optional HD GPU path.
+resolution through CPU presentation, with ordinary window scaling; the
+optional HD GPU path is bypassed for this mode.
+
+Stereoscopic 3D is experimental. I have little experience with stereoscopic 3D,
+so please use caution and share feedback about how it works for you.
 
 ---
 
@@ -41,8 +45,9 @@ Native red gameplay captured from the recomp with color mods disabled.
 
 ### Quick start
 
-The **v0.2.3 Windows release** includes the Virtual Boy launcher, box art, and
-the optional full-color mod. Color is disabled by default; the original ROM is
+The **v0.2.4 Windows release** includes the Virtual Boy launcher, box art,
+the optional full-color mod and experimental Red/Cyan Stereoscopic 3D. Both
+mods are disabled by default; the original ROM is
 never modified. Linux/macOS build scripts are available for source builds.
 
 1. Download `MarioTennisVirtualBoyRecomp-windows-x64.zip` from [Releases](../../releases).
